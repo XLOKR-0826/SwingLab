@@ -1,0 +1,2044 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0B0D10">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>SwingLab</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Crect width=%2232%22 height=%2232%22 rx=%228%22 fill=%22%23C6F432%22/%3E%3Cpath d=%22M6 22C12 18 17 10 27 8%22 stroke=%22%230B0D10%22 stroke-width=%223%22 fill=%22none%22 stroke-linecap=%22round%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+:root{
+  --bg:#0B0D10; --bg2:#14171C; --card:#1A1E24; --card2:#22272E; --line:#2C323A;
+  --text:#F5F7FA; --sub:#9AA3AE; --dim:#6B7480;
+  --accent:#C6F432; --accent-ink:#0B0D10; --accent-soft:rgba(198,244,50,.14);
+  --red:#FF453A; --blue:#0A84FF; --yellow:#FFD60A; --orange:#FF9F0A; --cyan:#40C8E0;
+  --radius:18px; --tab-h:64px;
+  --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--text);height:100%}
+body{font-family:"Pretendard",-apple-system,BlinkMacSystemFont,"SF Pro Text","Apple SD Gothic Neo",system-ui,sans-serif;
+  font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;letter-spacing:-.01em;overscroll-behavior:none}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit;color:inherit}
+svg{display:block}
+#app{max-width:760px;margin:0 auto;min-height:100%;position:relative}
+#view{padding:calc(var(--safe-t) + 8px) 18px calc(var(--tab-h) + var(--safe-b) + 24px);min-height:100vh}
+body.fullscreen #view{padding:0}
+body.fullscreen #tabbar{display:none}
+
+/* tab bar */
+#tabbar{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:100%;max-width:760px;height:calc(var(--tab-h) + var(--safe-b));
+  padding-bottom:var(--safe-b);display:flex;background:rgba(14,16,20,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid var(--line);z-index:50}
+#tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--dim);font-size:11px}
+#tabbar a b{font-weight:500}
+#tabbar a.on{color:var(--text)}
+#tabbar a.on .ti svg{stroke:var(--accent)}
+.ti svg{width:24px;height:24px}
+
+/* headers */
+.topbar{display:flex;align-items:center;justify-content:space-between;height:52px;margin-bottom:6px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:20px;letter-spacing:.02em}
+.logo-mark{width:30px;height:20px;border-radius:5px;background:var(--accent);display:grid;place-items:center}
+.logo-mark svg{width:20px;height:14px}
+.icon-btn{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;color:var(--text)}
+.icon-btn:active{background:var(--card)}
+.icon-btn svg{width:22px;height:22px}
+.row{display:flex;align-items:center;gap:8px}
+.pagehead{display:flex;align-items:center;gap:4px;height:52px;margin:0 -8px 8px}
+.pagehead h1{font-size:18px;font-weight:700;flex:1;text-align:center;margin-right:40px}
+.pagehead.left h1{text-align:left;margin-right:0}
+
+h2.sec{font-size:17px;font-weight:700;margin:26px 0 12px;display:flex;align-items:center;justify-content:space-between}
+h2.sec a,h2.sec button{font-size:13px;font-weight:500;color:var(--sub)}
+.muted{color:var(--sub)} .dim{color:var(--dim)} .small{font-size:13px} .tiny{font-size:11px}
+.card{background:var(--card);border-radius:var(--radius);padding:16px}
+.card + .card{margin-top:10px}
+.grid2>.card,.grid3>.card{margin-top:0}
+.stack>*+*{margin-top:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:50px;padding:0 20px;border-radius:14px;
+  background:var(--card2);font-weight:600;font-size:15px;transition:transform .08s}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.light{background:#fff;color:#111}
+.btn.ghost{background:transparent;border:1px solid var(--line)}
+.btn.block{width:100%}
+.btn.sm{height:36px;padding:0 14px;font-size:13px;border-radius:11px}
+.btn svg{width:18px;height:18px}
+.btn[disabled]{opacity:.4;pointer-events:none}
+.chip{height:34px;padding:0 13px;border-radius:999px;background:var(--card2);font-size:13px;font-weight:600;color:var(--sub);
+  display:inline-flex;align-items:center;gap:6px;white-space:nowrap;border:1px solid transparent}
+.chip.on{background:var(--accent);color:var(--accent-ink)}
+.chip.outline.on{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+.chips::-webkit-scrollbar{display:none}
+.seg{display:flex;background:var(--card);border-radius:12px;padding:3px}
+.seg button{flex:1;height:34px;border-radius:9px;font-size:13px;font-weight:600;color:var(--sub)}
+.seg button.on{background:var(--card2);color:var(--text)}
+
+/* home */
+.hero{position:relative;overflow:hidden;background:linear-gradient(135deg,#1C2117 0%,#151A12 60%,#0F120D 100%);border-radius:22px;padding:20px;min-height:170px}
+.hero .who{font-size:20px;font-weight:700;display:flex;align-items:center;gap:4px}
+.hero .who svg{width:18px;height:18px;color:var(--sub)}
+.hero .golfer{position:absolute;right:6px;bottom:0;width:150px;height:160px;opacity:.95}
+.hero-stats{display:flex;gap:18px;margin-top:22px}
+.hero-stats div b{display:block;font-size:22px;font-weight:800;color:var(--accent)}
+.hero-stats div span{font-size:12px;color:var(--sub)}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;margin-top:20px}
+.quick a{display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12px;color:var(--sub)}
+.quick .qi{width:58px;height:58px;border-radius:18px;background:var(--card);display:grid;place-items:center;color:var(--text)}
+.quick .qi svg{width:26px;height:26px}
+.quick .qi.hl{background:var(--accent);color:var(--accent-ink)}
+.quick .qi.soon{opacity:.55}
+.rec{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:16px;padding:12px;margin-top:10px}
+.rec .th{width:58px;height:58px;border-radius:12px;background:#000 center/cover;flex:none;position:relative;overflow:hidden}
+.rec .th.ph{display:grid;place-items:center;color:var(--dim)}
+.rec .meta{flex:1;min-width:0}
+.rec .meta b{display:block;font-size:15px}
+.rec .meta span{font-size:12px;color:var(--sub)}
+.rec .go{width:34px;height:34px;border-radius:50%;background:var(--card2);display:grid;place-items:center}
+.rec .go svg{width:14px;height:14px}
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 7px;border-radius:6px;font-size:11px;font-weight:700;background:var(--card2);color:var(--sub)}
+.badge.acc{background:var(--accent-soft);color:var(--accent)}
+.badge.red{background:rgba(255,69,58,.15);color:var(--red)}
+.badge.yel{background:rgba(255,214,10,.14);color:var(--yellow)}
+.empty{text-align:center;padding:34px 16px;color:var(--sub);font-size:14px}
+.empty svg{width:40px;height:40px;margin:0 auto 10px;color:var(--dim)}
+
+/* upload */
+.drop{border:1.5px dashed var(--line);border-radius:20px;padding:34px 18px;text-align:center;display:block;cursor:pointer}
+.drop svg{width:42px;height:42px;margin:0 auto 10px;color:var(--accent)}
+.drop b{font-size:16px}
+.field{margin-top:16px}
+.field label.lb{display:block;font-size:13px;color:var(--sub);margin-bottom:8px;font-weight:600}
+.tip{display:flex;gap:10px;font-size:13px;color:var(--sub);margin-top:8px}
+.tip i{font-style:normal;color:var(--accent)}
+
+/* progress overlay */
+.overlay{position:fixed;inset:0;background:rgba(5,6,8,.86);backdrop-filter:blur(6px);z-index:80;display:grid;place-items:center;padding:30px}
+.overlay .box{width:100%;max-width:340px;text-align:center}
+.bar{height:8px;border-radius:99px;background:var(--card2);overflow:hidden;margin:18px 0 8px}
+.bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .2s}
+.spinner{width:44px;height:44px;border-radius:50%;border:3px solid var(--card2);border-top-color:var(--accent);margin:0 auto;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* player */
+.sp{margin:0 -18px}
+.sp-stagewrap{background:#000;display:flex;justify-content:center;align-items:center;position:sticky;top:0;z-index:20;overflow:hidden}
+.sp-stage{position:relative;touch-action:none}
+.sp-stage video{width:100%;height:100%;display:block;object-fit:contain;background:#000}
+.sp-stage canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.sp-stage canvas.draw.active{pointer-events:auto;cursor:crosshair}
+.sp-hud{position:absolute;left:10px;top:10px;display:flex;gap:6px;pointer-events:none}
+.sp-hud span{background:rgba(0,0,0,.55);backdrop-filter:blur(6px);border-radius:8px;padding:3px 8px;font-size:12px;font-weight:600}
+.legend{display:flex;gap:10px;font-size:11px;color:var(--sub);align-items:center}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:4px;vertical-align:middle}
+.sp-ctrl{padding:12px 18px 0}
+.sp-time{display:flex;align-items:center;gap:10px}
+.sp-time input[type=range]{flex:1}
+.sp-time .t{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;min-width:86px;text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;height:28px;background:transparent}
+input[type=range]::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:var(--card2)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;margin-top:-7px}
+input[type=range]::-moz-range-track{height:4px;border-radius:4px;background:var(--card2)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0}
+.sp-main{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.transport{display:flex;align-items:center;gap:6px}
+.tbtn{width:44px;height:44px;border-radius:14px;background:var(--card);display:grid;place-items:center}
+.tbtn svg{width:20px;height:20px}
+.tbtn.play{width:54px;height:54px;border-radius:50%;background:#fff;color:#000}
+.tbtn.play svg{width:22px;height:22px}
+.tbtn.on{background:var(--accent);color:var(--accent-ink)}
+.speeds{display:flex;gap:4px;background:var(--card);border-radius:12px;padding:3px}
+.speeds button{height:34px;min-width:46px;border-radius:9px;font-size:12px;font-weight:700;color:var(--sub)}
+.speeds button.on{background:#fff;color:#000}
+.phases{display:flex;gap:6px;margin-top:12px;overflow-x:auto;scrollbar-width:none}
+.phases::-webkit-scrollbar{display:none}
+.phases button{flex:1;min-width:66px;height:52px;border-radius:12px;background:var(--card);font-size:12px;font-weight:600;color:var(--sub);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px}
+.phases button small{font-size:10px;color:var(--dim);font-weight:500}
+.phases button.on{background:var(--accent-soft);color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.phases button:disabled{opacity:.35}
+.toolrow{display:flex;align-items:center;gap:6px;margin-top:12px;flex-wrap:wrap}
+.tool{height:38px;padding:0 11px;border-radius:11px;background:var(--card);display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--sub)}
+.tool svg{width:17px;height:17px}
+.tool.on{background:#fff;color:#000}
+.tool.acc.on{background:var(--accent);color:var(--accent-ink)}
+.palette{display:inline-flex;gap:6px;align-items:center;background:var(--card);border-radius:11px;padding:0 9px;height:38px}
+.palette button{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.15)}
+.palette button.on{outline:2px solid #fff;outline-offset:2px}
+.vsep{width:1px;height:22px;background:var(--line);margin:0 2px}
+
+/* metrics */
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.metric{background:var(--card);border-radius:16px;padding:13px}
+.metric span{font-size:11px;color:var(--sub);display:block}
+.metric b{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.metric b small{font-size:12px;font-weight:600;color:var(--sub);margin-left:2px}
+.metric.hl b{color:var(--accent)}
+.tempo-bar{display:flex;height:10px;border-radius:99px;overflow:hidden;margin-top:12px;background:var(--card2)}
+.tempo-bar i{display:block;height:100%}
+
+/* report (AI 분석 & 드릴) */
+.ai-result{background:var(--card);border-radius:20px;padding:16px;display:flex;gap:12px;align-items:flex-start;position:relative;overflow:hidden}
+.ai-badge{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;font-weight:800;font-size:13px}
+.ai-result b{font-size:16px;display:block;line-height:1.35}
+.ai-result p{font-size:13px;color:var(--sub);margin-top:4px}
+.ai-result .spark{position:absolute;right:-10px;top:-10px;width:120px;height:80px;opacity:.6}
+.cause{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+.cause:last-child{border-bottom:0}
+.cause .ci{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:none;background:var(--accent-soft);color:var(--accent)}
+.cause .ci svg{width:16px;height:16px}
+.cause .ci.warn{background:rgba(255,159,10,.15);color:var(--orange)}
+.cause .ci.bad{background:rgba(255,69,58,.15);color:var(--red)}
+.cause b{font-size:14px;display:block}
+.cause p{font-size:12.5px;color:var(--sub);margin-top:2px}
+.phase-list .ph{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.phase-list .ph:last-child{border-bottom:0}
+.phase-list .ph .n{width:76px;font-size:13px;font-weight:700;flex:none}
+.phase-list .ph .d{flex:1;font-size:12.5px;color:var(--sub)}
+.phase-list .ph .dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--accent)}
+.phase-list .ph .dot.warn{background:var(--orange)} .phase-list .ph .dot.bad{background:var(--red)} .phase-list .ph .dot.na{background:var(--dim)}
+.drill{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:16px;padding:10px;margin-top:8px}
+.drill .dt{width:96px;height:62px;border-radius:11px;flex:none;position:relative;overflow:hidden;display:grid;place-items:center}
+.drill .dt svg{width:26px;height:26px;color:#fff;opacity:.95}
+.drill .dt .len{position:absolute;right:5px;bottom:4px;font-size:10px;font-weight:700;background:rgba(0,0,0,.6);border-radius:4px;padding:1px 4px}
+.drill .dm{flex:1;min-width:0}
+.drill .dm b{font-size:14px;display:block}
+.drill .dm span{font-size:12px;color:var(--sub);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.drill .dm span.badge{display:inline-flex;overflow:visible}
+.drill .chev{color:var(--dim)}
+.drill .chev svg{width:16px;height:16px}
+
+/* compare */
+.cmp-area{position:relative;margin:0 -18px;background:#000}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:2px}
+.cmp-grid.overlay{grid-template-columns:1fr}
+.cmp-slot{position:relative;background:#0a0a0a;aspect-ratio:9/16;max-height:66vh;overflow:hidden}
+.cmp-grid.overlay .cmp-slot{aspect-ratio:auto;height:62vh}
+.cmp-slot video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.cmp-grid.overlay .cmp-slot video.b{opacity:var(--op,.5)}
+.cmp-slot .lab{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:7px;font-size:12px;font-weight:700;z-index:2}
+.cmp-slot .pick{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:12px;text-align:center}
+.cmp-area canvas.draw{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
+.cmp-area canvas.draw.active{pointer-events:auto}
+.cmp-ctrls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.cmp-ctrl{background:var(--card);border-radius:14px;padding:10px}
+.cmp-ctrl .r{display:flex;align-items:center;gap:6px}
+.cmp-ctrl input[type=range]{width:100%}
+.mini-speeds{display:flex;gap:3px;margin-top:6px}
+.mini-speeds button{flex:1;height:28px;border-radius:8px;font-size:11px;font-weight:700;background:var(--card2);color:var(--sub)}
+.mini-speeds button.on{background:#fff;color:#000}
+
+/* sheet */
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:90;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg2);width:100%;max-width:760px;border-radius:22px 22px 0 0;padding:10px 18px calc(18px + var(--safe-b));max-height:80vh;overflow:auto}
+.sheet .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:0 auto 12px}
+.sheet h3{font-size:17px;margin-bottom:10px}
+
+/* practice (camera) */
+.pm{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column;max-width:760px;margin:0 auto}
+.pm-stage{position:relative;flex:1;overflow:hidden}
+.pm-stage video,.pm-stage canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.pm-top{position:absolute;top:calc(var(--safe-t) + 10px);left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;z-index:3}
+.pill{height:30px;padding:0 11px;border-radius:99px;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700}
+.pill .rd{width:8px;height:8px;border-radius:50%;background:var(--red)}
+.pill.rec .rd{animation:blink 1s infinite}
+@keyframes blink{50%{opacity:.2}}
+.pm-status{position:absolute;top:calc(var(--safe-t) + 52px);left:50%;transform:translateX(-50%);z-index:3}
+.pm-status .pill{background:rgba(198,244,50,.92);color:#0B0D10;height:32px;font-size:13px}
+.pm-status .pill.busy{background:rgba(255,214,10,.95)}
+.pm-status .pill.swing{background:rgba(255,69,58,.95);color:#fff}
+.pm-guide{position:absolute;left:18%;right:18%;top:22%;bottom:18%;border:1.5px dashed rgba(198,244,50,.45);border-radius:18px;z-index:2;pointer-events:none}
+.pm-bottom{background:linear-gradient(to top,rgba(0,0,0,.95),rgba(0,0,0,.7));padding:10px 14px calc(14px + var(--safe-b));position:relative;z-index:3}
+.pm-count{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--sub);margin-bottom:8px}
+.pm-count b{color:#fff;font-size:15px}
+.pm-thumbs{display:flex;gap:6px;overflow-x:auto;min-height:62px;scrollbar-width:none}
+.pm-thumbs::-webkit-scrollbar{display:none}
+.pm-thumbs div{width:50px;height:62px;flex:none;border-radius:9px;background:#222 center/cover;position:relative;border:1.5px solid rgba(255,255,255,.15)}
+.pm-thumbs div span{position:absolute;bottom:2px;left:0;right:0;text-align:center;font-size:10px;font-weight:700;text-shadow:0 1px 2px #000}
+.pm-ctrl{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding:0 18px}
+.recbtn{width:70px;height:70px;border-radius:50%;border:4px solid #fff;display:grid;place-items:center}
+.recbtn i{width:54px;height:54px;border-radius:50%;background:var(--red);transition:all .2s}
+.recbtn.on i{width:28px;height:28px;border-radius:7px}
+.pm-side{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center}
+.pm-side svg{width:22px;height:22px}
+
+/* consistency */
+.bars{display:flex;align-items:flex-end;gap:6px;height:120px;padding-top:10px}
+.bars div{flex:1;background:var(--accent);border-radius:6px 6px 2px 2px;position:relative;min-width:12px}
+.bars div span{position:absolute;top:-17px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--sub);white-space:nowrap}
+.bars div em{position:absolute;bottom:-17px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--dim);font-style:normal}
+.score-ring{width:110px;height:110px;position:relative;flex:none}
+.score-ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:28px;font-weight:800}
+table.t{width:100%;border-collapse:collapse;font-size:13px}
+table.t th{color:var(--sub);font-weight:600;text-align:left;padding:8px 4px;border-bottom:1px solid var(--line)}
+table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+
+/* coming soon */
+.soon-hero{background:var(--card);border-radius:22px;padding:22px;position:relative;overflow:hidden}
+.soon-hero .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:11px;font-weight:800;padding:4px 8px;border-radius:7px;margin-bottom:10px}
+.soon-hero h2{font-size:20px}
+.soon-hero p{color:var(--sub);font-size:13px;margin-top:6px}
+.skel{background:linear-gradient(90deg,var(--card) 0%,var(--card2) 50%,var(--card) 100%);background-size:200% 100%;animation:sk 1.6s infinite;border-radius:10px}
+@keyframes sk{to{background-position:-200% 0}}
+.lb-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.lb-row:last-child{border-bottom:0}
+.prod{background:var(--card);border-radius:16px;overflow:hidden}
+.prod .pi{aspect-ratio:1;display:grid;place-items:center;color:var(--dim)}
+.prod .pi svg{width:40px;height:40px}
+.prod .pt{padding:10px 12px}
+.list-row{display:flex;align-items:center;justify-content:space-between;padding:15px 0;border-bottom:1px solid var(--line);font-size:15px}
+.list-row:last-child{border-bottom:0}
+.list-row .r{color:var(--sub);font-size:13px;display:flex;align-items:center;gap:6px}
+
+#toast{position:fixed;left:50%;bottom:calc(var(--tab-h) + var(--safe-b) + 16px);transform:translate(-50%,20px);background:#fff;color:#111;
+  padding:11px 16px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:120;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+.chk{width:22px;height:22px;border-radius:7px;border:2px solid var(--line);display:grid;place-items:center;flex:none}
+.chk.on{background:var(--accent);border-color:var(--accent);color:#000}
+.chk svg{width:14px;height:14px}
+@media (min-width:600px){ .sp,.cmp-area{margin:0;border-radius:18px;overflow:hidden} .sp-ctrl{padding:12px 0 0} }
+
+</style>
+</head>
+<body>
+<div id="app">
+  <main id="view"></main>
+  <nav id="tabbar">
+    <a data-tab="home" href="#/home"><span class="ti" data-icon="home"></span><b>홈</b></a>
+    <a data-tab="records" href="#/records"><span class="ti" data-icon="chart"></span><b>기록</b></a>
+    <a data-tab="tour" href="#/tour"><span class="ti" data-icon="trophy"></span><b>대회</b></a>
+    <a data-tab="store" href="#/store"><span class="ti" data-icon="cart"></span><b>스토어</b></a>
+    <a data-tab="more" href="#/more"><span class="ti" data-icon="menu"></span><b>더보기</b></a>
+  </nav>
+  <div id="toast"></div>
+</div>
+<!-- build:scripts -->
+<script>
+// SwingLab core: 라우터, 공용 유틸, 아이콘, 설정
+window.SL = window.SL || {};
+(function (SL) {
+  SL.$ = (s, r = document) => r.querySelector(s);
+  SL.$$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+  SL.h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
+  SL.esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  SL.uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  SL.sleep = (ms) => new Promise(r => setTimeout(r, ms));
+  SL.clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+  SL.fmtDate = (ts) => {
+    const d = new Date(ts), p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}.${p(d.getMonth() + 1)}.${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  SL.fmtTime = (s) => {
+    if (!isFinite(s)) s = 0;
+    const m = Math.floor(s / 60), r = s - m * 60;
+    return `${m}:${r.toFixed(2).padStart(5, '0')}`;
+  };
+
+  // ---------- 설정 (localStorage, 실패해도 동작) ----------
+  const DEF = { hand: 'right', name: '사용자', analysisFps: 30, frameStep: 30 };
+  SL.settings = Object.assign({}, DEF);
+  try { Object.assign(SL.settings, JSON.parse(localStorage.getItem('sl.settings') || '{}')); } catch (e) {}
+  SL.saveSettings = () => { try { localStorage.setItem('sl.settings', JSON.stringify(SL.settings)); } catch (e) {} };
+
+  SL.toast = (msg, ms = 2200) => {
+    const t = SL.$('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(SL._tt); SL._tt = setTimeout(() => t.classList.remove('show'), ms);
+  };
+
+  // ---------- 아이콘 (stroke 기반 SVG) ----------
+  const I = (p, extra = '') => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" ${extra}>${p}</svg>`;
+  SL.icons = {
+    home: I('<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20h5v-6h4v6h5V9.5"/>'),
+    chart: I('<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'),
+    trophy: I('<path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H4v1a4 4 0 0 0 4 4M16 6h4v1a4 4 0 0 1-4 4M12 13v4M8 21h8M9 17h6"/>'),
+    cart: I('<path d="M3 4h2l2.4 11.2a2 2 0 0 0 2 1.6h7.7a2 2 0 0 0 2-1.5L21 8H6"/><circle cx="10" cy="20" r="1.3"/><circle cx="17" cy="20" r="1.3"/>'),
+    menu: I('<path d="M4 7h16M4 12h16M4 17h16"/>'),
+    search: I('<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>'),
+    bell: I('<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15L6 16Z"/><path d="M10 21h4"/>'),
+    back: I('<path d="m15 5-7 7 7 7"/>'),
+    chev: I('<path d="m9 5 7 7-7 7"/>'),
+    upload: I('<rect x="3" y="6" width="18" height="14" rx="3"/><path d="M12 16v-6M9 12.5 12 9.5l3 3"/><path d="M8 6l1.5-2h5L16 6"/>'),
+    camera: I('<path d="M3 8.5A2.5 2.5 0 0 1 5.5 6H7l1.5-2h7L17 6h1.5A2.5 2.5 0 0 1 21 8.5v9A2.5 2.5 0 0 1 18.5 20h-13A2.5 2.5 0 0 1 3 17.5v-9Z"/><circle cx="12" cy="13" r="3.5"/>'),
+    target: I('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r=".8" fill="currentColor"/>'),
+    analysis: I('<path d="M4 19V5M4 19h16"/><path d="m7 15 4-5 3 3 5-6"/>'),
+    compare: I('<rect x="3" y="5" width="8" height="14" rx="2"/><rect x="13" y="5" width="8" height="14" rx="2"/><path d="m6 11 2 2 0 0M16.5 10v4"/>'),
+    drill: I('<path d="M12 3v14"/><path d="M12 17a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"/><path d="M12 5l7 3-7 3"/>'),
+    ai: I('<path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8Z"/><path d="M18.5 15l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8Z"/>'),
+    shot: I('<circle cx="6" cy="18" r="2"/><path d="M8 16C11 9 15 6 21 5"/><path d="M17 4.5 21 5l-1 3.8"/>'),
+    play: I('<path d="M7 4.5v15l12.5-7.5Z" fill="currentColor"/>'),
+    pause: I('<rect x="6" y="4.5" width="4" height="15" rx="1" fill="currentColor"/><rect x="14" y="4.5" width="4" height="15" rx="1" fill="currentColor"/>'),
+    prev: I('<path d="M6 5v14"/><path d="m18 5-9 7 9 7Z" fill="currentColor"/>'),
+    next: I('<path d="M18 5v14"/><path d="m6 5 9 7-9 7Z" fill="currentColor"/>'),
+    line: I('<path d="M5 19 19 5"/><circle cx="5" cy="19" r="1.6" fill="currentColor"/><circle cx="19" cy="5" r="1.6" fill="currentColor"/>'),
+    circle: I('<circle cx="12" cy="12" r="8"/>'),
+    eye: I('<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/>'),
+    eyeoff: I('<path d="M3 3l18 18"/><path d="M10.6 5.1A9.7 9.7 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 4M6.2 6.3C3.6 8 2 12 2 12s3.5 7 10 7a9.6 9.6 0 0 0 4.3-1"/>'),
+    undo: I('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),
+    trash: I('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
+    tracer: I('<path d="M4 20C6 10 12 4 20 4"/><path d="M4 20c4-2 8-8 9-14" stroke-dasharray="2 3"/>'),
+    skeleton: I('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 9h8M12 14l-3 7M12 14l3 7M8 9l-2 5M16 9l2 5"/>'),
+    flip: I('<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>'),
+    gallery: I('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5L5 20"/>'),
+    check: I('<path d="m5 12.5 4.5 4.5L19 7.5"/>', 'stroke-width="2.6"'),
+    warn: I('<path d="M12 3 2 20h20L12 3Z"/><path d="M12 10v4M12 17.5v.01"/>'),
+    x: I('<path d="M6 6l12 12M18 6 6 18"/>'),
+    plus: I('<path d="M12 5v14M5 12h14"/>'),
+    youtube: I('<rect x="2.5" y="5.5" width="19" height="13" rx="4"/><path d="m10 9 5 3-5 3Z" fill="currentColor"/>'),
+    shirt: I('<path d="M8 3 3 6l2 4 2-1v12h10V9l2 1 2-4-5-3a4 4 0 0 1-8 0Z"/>'),
+    club: I('<path d="M17 3 9 17"/><path d="M9 17c-1 2-3 3.5-5 3.5L5 18c1.5 0 3-.5 4-1"/>'),
+    ball: I('<circle cx="12" cy="12" r="8"/><circle cx="10" cy="9" r=".7" fill="currentColor"/><circle cx="14" cy="10" r=".7" fill="currentColor"/><circle cx="11" cy="13" r=".7" fill="currentColor"/><circle cx="15" cy="14" r=".7" fill="currentColor"/>'),
+    bag: I('<path d="M8 7V5a4 4 0 0 1 8 0v2"/><rect x="6" y="7" width="12" height="14" rx="3"/><path d="M6 12h12"/>'),
+    settings: I('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.6 15 1.6 1.6 0 0 0 2 14H2a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H22a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>'),
+    stack: I('<rect x="4" y="4" width="12" height="12" rx="2"/><rect x="8" y="8" width="12" height="12" rx="2"/>'),
+  };
+  SL.icon = (n) => SL.icons[n] || '';
+
+  SL.logo = () => `<div class="logo"><span class="logo-mark"><svg viewBox="0 0 20 14"><path d="M2 11C6 9 9 4 18 3" stroke="#0B0D10" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="5" cy="11" r="1.6" fill="#0B0D10"/></svg></span>SWING LAB</div>`;
+
+  SL.pageHead = (title, { back = true, right = '' } = {}) => `
+    <header class="pagehead">
+      ${back ? `<button class="icon-btn" onclick="SL.back()">${SL.icon('back')}</button>` : '<span style="width:40px"></span>'}
+      <h1>${SL.esc(title)}</h1>${right}
+    </header>`;
+
+  SL.back = () => { if (history.length > 1) history.back(); else SL.go('home'); };
+
+  // ---------- 라우터 ----------
+  SL.routes = {};
+  SL.route = (name, fn) => { SL.routes[name] = fn; };
+  SL.go = (name, params) => {
+    const q = params ? '?' + new URLSearchParams(params).toString() : '';
+    location.hash = '#/' + name + q;
+  };
+  SL.parseHash = () => {
+    const h = location.hash.replace(/^#\/?/, '');
+    const [name, q] = h.split('?');
+    return { name: name || 'home', params: Object.fromEntries(new URLSearchParams(q || '')) };
+  };
+  const TAB_OF = { home: 'home', records: 'records', tour: 'tour', store: 'store', more: 'more', shotdata: 'more' };
+
+  SL.render = async () => {
+    if (typeof SL._cleanup === 'function') { try { SL._cleanup(); } catch (e) { console.warn(e); } }
+    SL._cleanup = null;
+    document.body.classList.remove('fullscreen');
+    const { name, params } = SL.parseHash();
+    const view = SL.$('#view');
+    view.innerHTML = '';
+    window.scrollTo(0, 0);
+    SL.$$('#tabbar a').forEach(a => a.classList.toggle('on', a.dataset.tab === TAB_OF[name]));
+    const fn = SL.routes[name] || SL.routes.home;
+    try { SL._cleanup = await fn(view, params); }
+    catch (e) { console.error(e); view.innerHTML = `<div class="empty">문제가 발생했어요<br><span class="small dim">${SL.esc(e.message)}</span></div>`; }
+  };
+
+  SL.start = () => {
+    SL.$$('#tabbar .ti').forEach(s => s.innerHTML = SL.icon(s.dataset.icon));
+    window.addEventListener('hashchange', SL.render);
+    SL.render();
+  };
+
+  // ---------- 비디오 로딩 (MediaRecorder webm 길이=Infinity 버그 보정) ----------
+  SL.loadVideo = (video, src) => new Promise((resolve, reject) => {
+    video.playsInline = true; video.muted = true; video.preload = 'auto';
+    video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
+    const fail = () => reject(new Error('영상을 불러올 수 없어요 (지원하지 않는 형식일 수 있어요)'));
+    video.addEventListener('error', fail, { once: true });
+    video.addEventListener('loadedmetadata', async () => {
+      if (!isFinite(video.duration)) {
+        await new Promise(r => {
+          const done = () => { video.removeEventListener('durationchange', chk); r(); };
+          const chk = () => { if (isFinite(video.duration)) done(); };
+          video.addEventListener('durationchange', chk);
+          video.currentTime = 1e7;
+          setTimeout(done, 3000);
+        });
+        video.currentTime = 0;
+      }
+      resolve(video);
+    }, { once: true });
+    video.src = src;
+    video.load();
+  });
+
+  SL.seek = (video, t) => new Promise(r => {
+    let done = false;
+    const fin = () => { if (done) return; done = true; video.removeEventListener('seeked', fin); r(); };
+    video.addEventListener('seeked', fin);
+    video.currentTime = t;
+    setTimeout(fin, 2000);
+  });
+
+  // 비디오 프레임 → 썸네일 dataURL
+  SL.thumbOf = (video, w = 240) => {
+    try {
+      const vw = video.videoWidth, vh = video.videoHeight; if (!vw) return null;
+      const c = document.createElement('canvas'); c.width = w; c.height = Math.round(w * vh / vw);
+      c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
+      return c.toDataURL('image/jpeg', 0.72);
+    } catch (e) { return null; }
+  };
+
+  SL.sheet = (html, onMount) => {
+    const bg = SL.h(`<div class="sheet-bg"><div class="sheet"><div class="grab"></div>${html}</div></div>`);
+    const close = () => bg.remove();
+    bg.addEventListener('click', e => { if (e.target === bg) close(); });
+    document.body.appendChild(bg);
+    onMount && onMount(bg.querySelector('.sheet'), close);
+    return close;
+  };
+
+  SL.CLUBS = ['드라이버', '우드', '유틸', '아이언', '웨지'];
+  SL.PHASES = [
+    { key: 'address', name: '어드레스' },
+    { key: 'takeaway', name: '테이크백' },
+    { key: 'backswing', name: '백스윙' },
+    { key: 'top', name: '탑스윙' },
+    { key: 'downswing', name: '다운스윙' },
+    { key: 'impact', name: '임팩트' },
+    { key: 'follow', name: '팔로우스루' },
+    { key: 'finish', name: '피니시' },
+  ];
+  SL.JUMP_PHASES = ['address', 'top', 'impact', 'follow', 'finish'];
+  SL.phaseName = (k) => (SL.PHASES.find(p => p.key === k) || {}).name || k;
+})(window.SL);
+
+</script>
+<script>
+// IndexedDB 저장소: 스윙 영상(blob) + 분석 결과
+(function (SL) {
+  const DB = 'swinglab', STORE = 'swings', VER = 1;
+  let _db = null, memory = new Map(); // IndexedDB 불가 환경 대비 메모리 fallback
+
+  function open() {
+    if (_db) return Promise.resolve(_db);
+    return new Promise((res) => {
+      let req;
+      try { req = indexedDB.open(DB, VER); } catch (e) { return res(null); }
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(STORE)) {
+          const s = db.createObjectStore(STORE, { keyPath: 'id' });
+          s.createIndex('createdAt', 'createdAt');
+        }
+      };
+      req.onsuccess = () => { _db = req.result; res(_db); };
+      req.onerror = () => res(null);
+    });
+  }
+  const tx = async (mode, fn) => {
+    const db = await open();
+    if (!db) return fn(null);
+    return new Promise((res, rej) => {
+      const t = db.transaction(STORE, mode), s = t.objectStore(STORE);
+      const r = fn(s);
+      t.oncomplete = () => res(r && 'result' in r ? r.result : r);
+      t.onerror = () => rej(t.error);
+    });
+  };
+
+  SL.db = {
+    async put(rec) {
+      rec.updatedAt = Date.now();
+      const db = await open();
+      if (!db) { memory.set(rec.id, rec); return rec; }
+      await tx('readwrite', s => s.put(rec));
+      return rec;
+    },
+    async get(id) {
+      const db = await open();
+      if (!db) return memory.get(id) || null;
+      return tx('readonly', s => s.get(id));
+    },
+    async all() {
+      const db = await open();
+      let list = db ? await tx('readonly', s => s.getAll()) : [...memory.values()];
+      return (list || []).sort((a, b) => b.createdAt - a.createdAt);
+    },
+    async del(id) {
+      const db = await open();
+      if (!db) { memory.delete(id); return; }
+      await tx('readwrite', s => s.delete(id));
+    },
+    async clear() {
+      const db = await open();
+      if (!db) { memory.clear(); return; }
+      await tx('readwrite', s => s.clear());
+    },
+  };
+
+  // 저장된 레코드에서 재생용 URL 생성 (페이지 떠날 때 revoke)
+  SL.blobUrl = (rec) => rec && rec.blob ? URL.createObjectURL(rec.blob) : null;
+})(window.SL);
+
+</script>
+<script>
+// MediaPipe Pose Landmarker 래퍼 (CDN 동적 로드)
+(function (SL) {
+  const VER = '0.10.14';
+  const LIB = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VER}/vision_bundle.mjs`;
+  const WASM = `https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${VER}/wasm`;
+  const MODELS = {
+    lite: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task',
+    full: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
+  };
+  const cache = {};
+  let ts = 0; // VIDEO 모드는 타임스탬프가 계속 증가해야 함
+
+  SL.pose = {
+    // MediaPipe 랜드마크 번호
+    L: { nose: 0, lSh: 11, rSh: 12, lEl: 13, rEl: 14, lWr: 15, rWr: 16, lHip: 23, rHip: 24, lKn: 25, rKn: 26, lAn: 27, rAn: 28, lHeel: 29, rHeel: 30, lToe: 31, rToe: 32 },
+    EDGES: [[11, 12], [11, 13], [13, 15], [12, 14], [14, 16], [11, 23], [12, 24], [23, 24], [23, 25], [25, 27], [24, 26], [26, 28], [27, 31], [28, 32], [27, 29], [28, 30]],
+
+    async get(kind = 'full') {
+      if (cache[kind]) return cache[kind];
+      cache[kind] = (async () => {
+        const vision = await import(LIB);
+        const files = await vision.FilesetResolver.forVisionTasks(WASM);
+        const make = (delegate) => vision.PoseLandmarker.createFromOptions(files, {
+          baseOptions: { modelAssetPath: MODELS[kind], delegate },
+          runningMode: 'VIDEO', numPoses: 1,
+          minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5,
+        });
+        try { return await make('GPU'); } catch (e) { console.warn('GPU 실패 → CPU', e); return make('CPU'); }
+      })();
+      try { return await cache[kind]; } catch (e) { cache[kind] = null; throw e; }
+    },
+
+    // 한 프레임 추론 → [[x,y,vis], ...] (정규화 좌표) 또는 null
+    detect(lm, source) {
+      ts += 34;
+      const r = lm.detectForVideo(source, ts);
+      const p = r && r.landmarks && r.landmarks[0];
+      if (!p) return null;
+      return p.map(q => [+q.x.toFixed(4), +q.y.toFixed(4), +(q.visibility ?? 1).toFixed(2)]);
+    },
+  };
+})(window.SL);
+
+</script>
+<script>
+// 스윙 분석: 프레임 추출 → 관절/클럽헤드 추정 → 구간 검출 → 템포 → 진단
+(function (SL) {
+  const A = {};
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.min(a[2] ?? 1, b[2] ?? 1)];
+  const deg = (r) => r * 180 / Math.PI;
+  const angleAt = (a, b, c) => { // b에서의 각도
+    const v1 = [a[0] - b[0], a[1] - b[1]], v2 = [c[0] - b[0], c[1] - b[1]];
+    const d = Math.hypot(...v1) * Math.hypot(...v2); if (!d) return null;
+    return deg(Math.acos(SL.clamp((v1[0] * v2[0] + v1[1] * v2[1]) / d, -1, 1)));
+  };
+  const median = (arr) => { const s = arr.filter(v => v != null && isFinite(v)).sort((a, b) => a - b); return s.length ? s[s.length >> 1] : null; };
+  A.util = { dist, mid, angleAt, median };
+
+  // 정규화 좌표를 (x*가로세로비, y)로 바꿔 거리 계산을 등방성으로
+  const P = (lm, k, ar) => lm && lm[k] ? [lm[k][0] * ar, lm[k][1], lm[k][2]] : null;
+  const handsOf = (lm, ar) => lm ? mid(P(lm, 15, ar), P(lm, 16, ar)) : null;
+  const torsoOf = (lm, ar) => lm ? dist(mid(P(lm, 11, ar), P(lm, 12, ar)), mid(P(lm, 23, ar), P(lm, 24, ar))) : null;
+  A.handsOf = handsOf; A.torsoOf = torsoOf; A.P = P;
+
+  // ---------------- 1. 프레임 추출 ----------------
+  A.extract = async (video, { fps = 30, maxSec = 15, onProgress = () => {} } = {}) => {
+    const lm = await SL.pose.get('full');
+    const vw = video.videoWidth, vh = video.videoHeight, ar = vw / vh;
+    const dur = Math.min(video.duration, maxSec);
+    const n = Math.max(2, Math.floor(dur * fps));
+    const W = 160, H = Math.round(160 / ar);
+    const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const ctx = cv.getContext('2d', { willReadFrequently: true });
+    let prev = null; const frames = [];
+    for (let i = 0; i < n; i++) {
+      const t = i / fps;
+      await SL.seek(video, Math.min(t + 0.001, video.duration - 0.01));
+      ctx.drawImage(video, 0, 0, W, H);
+      const d = ctx.getImageData(0, 0, W, H).data;
+      const g = new Uint8Array(W * H);
+      for (let p = 0, q = 0; p < g.length; p++, q += 4) g[p] = (d[q] * 77 + d[q + 1] * 150 + d[q + 2] * 29) >> 8;
+      let pose = null;
+      try { pose = SL.pose.detect(lm, video); } catch (e) { console.warn(e); }
+      let club = null;
+      if (prev && pose) {
+        const mask = new Uint8Array(W * H);
+        for (let p = 0; p < g.length; p++) mask[p] = Math.abs(g[p] - prev[p]) > 28 ? 1 : 0;
+        club = A.estimateClub(pose, mask, W, H, ar);
+      }
+      prev = g;
+      frames.push({ t: +t.toFixed(3), lm: pose, club });
+      onProgress((i + 1) / n);
+    }
+    A.cleanClub(frames, ar);
+    return { frames, fps, ar, width: vw, height: vh };
+  };
+
+  // 움직임(프레임 차분) 중 손에서 '클럽 길이' 범위 안의 가장 먼 점 = 클럽헤드 추정 (베타)
+  A.estimateClub = (pose, mask, W, H, ar) => {
+    const hands = handsOf(pose, ar), T = torsoOf(pose, ar);
+    if (!hands || !T || T < 0.02) return null;
+    const rMin = 0.9 * T, rMax = 2.8 * T;
+    let best = null, bestD = 0;
+    for (let y = 1; y < H - 1; y++) {
+      for (let x = 1; x < W - 1; x++) {
+        const p = y * W + x; if (!mask[p]) continue;
+        const px = ((x + 0.5) / W) * ar, py = (y + 0.5) / H;
+        const d = Math.hypot(px - hands[0], py - hands[1]);
+        if (d < rMin || d > rMax || d <= bestD) continue;
+        const sup = mask[p - 1] + mask[p + 1] + mask[p - W] + mask[p + W] + mask[p - W - 1] + mask[p - W + 1] + mask[p + W - 1] + mask[p + W + 1];
+        if (sup < 3) continue;
+        bestD = d; best = [(x + 0.5) / W, (y + 0.5) / H];
+      }
+    }
+    return best ? [+best[0].toFixed(4), +best[1].toFixed(4)] : null;
+  };
+
+  // 튀는 점 제거 + 짧은 공백 보간
+  A.cleanClub = (frames, ar) => {
+    const T = median(frames.map(f => torsoOf(f.lm, ar))) || 0.2;
+    const pts = frames.map(f => f.club ? [f.club[0] * ar, f.club[1]] : null);
+    const out = pts.map((p, i) => {
+      if (!p) return null;
+      const win = []; for (let k = -3; k <= 3; k++) if (pts[i + k]) win.push(pts[i + k]);
+      if (win.length < 3) return null;
+      const m = [median(win.map(q => q[0])), median(win.map(q => q[1]))];
+      return dist(p, m) > 0.7 * T ? null : p;
+    });
+    for (let i = 0; i < out.length; i++) { // 3프레임 이하 공백 선형 보간
+      if (out[i]) continue;
+      let a = i - 1, b = i; while (b < out.length && !out[b]) b++;
+      if (a >= 0 && out[a] && b < out.length && b - a - 1 <= 3) {
+        for (let k = a + 1; k < b; k++) { const r = (k - a) / (b - a); out[k] = [out[a][0] + (out[b][0] - out[a][0]) * r, out[a][1] + (out[b][1] - out[a][1]) * r]; }
+      }
+      i = b - 1;
+    }
+    frames.forEach((f, i) => { f.club = out[i] ? [+(out[i][0] / ar).toFixed(4), +out[i][1].toFixed(4)] : null; });
+  };
+
+  // ---------------- 2. 구간(포지션) 검출 ----------------
+  A.series = (frames, ar) => {
+    let H = frames.map(f => handsOf(f.lm, ar));
+    const valid = H.filter(Boolean).length;
+    if (valid < Math.max(8, frames.length * 0.4)) return null;
+    // 결측 보간
+    for (let i = 0; i < H.length; i++) if (!H[i]) {
+      let a = i - 1; while (a >= 0 && !H[a]) a--;
+      let b = i + 1; while (b < H.length && !H[b]) b++;
+      if (a < 0) H[i] = H[b]; else if (b >= H.length) H[i] = H[a];
+      else { const r = (i - a) / (b - a); H[i] = [H[a][0] + (H[b][0] - H[a][0]) * r, H[a][1] + (H[b][1] - H[a][1]) * r, 0]; }
+    }
+    const S = H.map((_, i) => { // 3프레임 이동평균
+      const w = [H[i - 1], H[i], H[i + 1]].filter(Boolean);
+      return [w.reduce((s, p) => s + p[0], 0) / w.length, w.reduce((s, p) => s + p[1], 0) / w.length];
+    });
+    const T = median(frames.map(f => torsoOf(f.lm, ar))) || 0.2;
+    const sp = S.map((p, i) => i ? dist(p, S[i - 1]) / T : 0);
+    return { H: S, sp, T };
+  };
+
+  A.detectPhases = (frames, fps, ar) => {
+    const s = A.series(frames, ar); if (!s) return null;
+    const { H, sp } = s, n = H.length, y = H.map(p => p[1]);
+    const thr = 0.02 * (30 / fps);
+    const spS = sp.map((_, i) => (sp[Math.max(0, i - 1)] + sp[i] + sp[Math.min(n - 1, i + 1)]) / 3);
+    let peak = 0; for (let i = 1; i < n; i++) if (spS[i] > spS[peak]) peak = i;
+    const w = Math.max(2, Math.round(0.1 * fps));
+    let impact = Math.max(1, peak - w);
+    for (let i = Math.max(1, peak - w); i <= Math.min(n - 1, peak + w); i++) if (y[i] > y[impact]) impact = i;
+    let top = 0; for (let i = 1; i < impact; i++) if (y[i] < y[top]) top = i;
+    if (top >= impact - 1) return null;
+    let start = top;
+    const still = (i) => i >= 2 && spS[i] < thr && spS[i - 1] < thr && spS[i - 2] < thr;
+    while (start > 0 && !still(start)) start--;
+    const address = start;
+    const travel = y[address] - y[top];
+    if (travel < 0.4 * s.T) return null; // 백스윙으로 보기 어려움
+    const first = (a, b, cond, def) => { for (let i = a; i <= b; i++) if (cond(i)) return i; return def; };
+    const takeaway = first(address + 1, top, i => y[i] <= y[address] - 0.2 * travel, Math.round((address + top) / 2));
+    const backswing = first(takeaway, top, i => y[i] <= y[address] - 0.65 * travel, Math.round((takeaway + top) / 2));
+    const downswing = first(top + 1, impact, i => y[i] >= y[top] + 0.5 * (y[impact] - y[top]), Math.round((top + impact) / 2));
+    const follow = first(impact + 1, n - 1, i => y[i] <= y[impact] - 0.6 * (y[impact] - y[top]), Math.min(n - 1, impact + Math.round(0.25 * fps)));
+    let finish = first(follow + 2, n - 1, i => i + 2 < n && spS[i] < thr * 1.5 && spS[i + 1] < thr * 1.5 && spS[i + 2] < thr * 1.5, n - 1);
+    const idx = { address, takeaway, backswing, top, downswing, impact, follow, finish };
+    const t = {}; for (const k in idx) t[k] = +(idx[k] / fps).toFixed(3);
+    return { idx, t, finishStable: finish < n - 1 };
+  };
+
+  A.tempo = (ph, fps, slow = 1) => {
+    if (!ph) return null;
+    const back = (ph.idx.top - ph.idx.address) / fps / slow;
+    const down = (ph.idx.impact - ph.idx.top) / fps / slow;
+    return { back: +back.toFixed(2), down: +down.toFixed(2), ratio: down > 0 ? +(back / down).toFixed(1) : null };
+  };
+
+  // ---------------- 3. 진단 (규칙 기반) ----------------
+  const MISS_MSG = {
+    slice: '우측으로 밀리는 슬라이스가 발생할 수 있어요',
+    hook: '왼쪽으로 감기는 훅이 발생할 수 있어요',
+    push: '공이 오른쪽으로 곧게 밀리는 푸시가 나올 수 있어요',
+    pull: '왼쪽으로 당겨지는 풀 샷이 나올 수 있어요',
+    fat: '뒷땅(두꺼운 샷)이 나올 수 있어요',
+    thin: '탑볼(얇은 샷)이 나올 수 있어요',
+    shank: '생크가 나올 수 있어요',
+  };
+  A.MISS = { slice: '슬라이스', hook: '훅', push: '푸시', pull: '풀', fat: '뒷땅', thin: '탑볼', shank: '생크' };
+  A.missMessage = (k, hand = 'right') => {
+    let m = MISS_MSG[k] || '';
+    if (hand === 'left') m = m.replace('우측', '#L#').replace('오른쪽', '#R#').replace('왼쪽', '오른쪽').replace('#L#', '좌측').replace('#R#', '왼쪽');
+    return m;
+  };
+
+  A.diagnose = (rec) => {
+    const { frames, phases: ph, ar = 9 / 16, view = 'side', hand = 'right', tempo } = rec;
+    const issues = [], notes = {};
+    SL.PHASES.forEach(p => notes[p.key] = { status: 'good', text: '' });
+    if (!ph) return { issues, notes, headline: '스윙 구간을 찾지 못했어요', sub: '전신이 다 보이도록 촬영하고, 어드레스부터 피니시까지 담아 주세요.', miss: null, measured: {} };
+    const lead = hand === 'right' ? { sh: 11, el: 13, wr: 15, hip: 23, an: 27 } : { sh: 12, el: 14, wr: 16, hip: 24, an: 28 };
+    const at = (key, k) => { // 해당 구간 ±1프레임 평균 좌표
+      const i = ph.idx[key], pts = [];
+      for (let d = -1; d <= 1; d++) { const f = frames[i + d]; if (f && f.lm && f.lm[k]) pts.push(P(f.lm, k, ar)); }
+      if (!pts.length) return null;
+      return [pts.reduce((s, p) => s + p[0], 0) / pts.length, pts.reduce((s, p) => s + p[1], 0) / pts.length, Math.min(...pts.map(p => p[2]))];
+    };
+    const hipMid = (key) => { const a = at(key, 23), b = at(key, 24); return a && b ? mid(a, b) : null; };
+    const shMid = (key) => { const a = at(key, 11), b = at(key, 12); return a && b ? mid(a, b) : null; };
+    const hands = (key) => { const a = at(key, 15), b = at(key, 16); return a && b ? mid(a, b) : null; };
+    const T = torsoOf(frames[ph.idx.address].lm, ar) || median(frames.map(f => torsoOf(f.lm, ar))) || 0.2;
+    const shW = (key) => { const a = at(key, 11), b = at(key, 12); return a && b ? dist(a, b) : null; };
+    const measured = {};
+    const add = (o) => {
+      issues.push(o);
+      const n = notes[o.phase]; const st = o.severity >= 2 ? 'bad' : 'warn';
+      if (n.status === 'good' || (n.status === 'warn' && st === 'bad')) n.status = st;
+      n.text = n.text ? n.text + ' · ' + o.short : o.short;
+    };
+
+    // 1) 머리(축) 움직임
+    const n0 = at('address', 0), n1 = at('impact', 0);
+    if (n0 && n1) {
+      const d = dist(n0, n1) / T; measured.headMove = +d.toFixed(2);
+      if (d > 0.3) add({ id: 'head_move', phase: 'impact', severity: d > 0.45 ? 2 : 1, short: '머리 이동 큼',
+        title: '임팩트까지 머리(축)가 많이 움직여요', detail: `어드레스 대비 머리 이동량이 몸통 길이의 ${Math.round(d * 100)}%예요. 축이 흔들리면 컨택이 불안정해져요.`, miss: ['fat', 'thin'] });
+    }
+    // 2) 템포
+    if (tempo && tempo.ratio) {
+      measured.tempo = tempo.ratio;
+      if (tempo.ratio < 2.2) add({ id: 'tempo_fast', phase: 'backswing', severity: 1, short: '백스윙 빠름',
+        title: '백스윙 템포가 빨라요', detail: `백스윙:다운스윙 = ${tempo.ratio}:1 이에요. 투어 평균은 약 3:1이에요. 서두르면 전환이 급해져요.`, miss: ['slice', 'pull'] });
+      else if (tempo.ratio > 4.2) add({ id: 'tempo_slow', phase: 'top', severity: 1, short: '전환 늘어짐',
+        title: '백스윙이 느리거나 탑에서 멈춰요', detail: `템포 ${tempo.ratio}:1 — 탑에서 리듬이 끊기면 다운스윙에서 손으로 치기 쉬워요.`, miss: ['push', 'slice'] });
+    }
+    // 3) 탑에서 리드 팔
+    const sh = at('top', lead.sh), el = at('top', lead.el), wr = at('top', lead.wr);
+    if (sh && el && wr && Math.min(sh[2], el[2], wr[2]) > 0.4) {
+      const a = angleAt(sh, el, wr); measured.leadArmTop = Math.round(a);
+      if (a < 160) add({ id: 'lead_arm_bent', phase: 'top', severity: a < 145 ? 2 : 1, short: `왼팔 ${Math.round(a)}°`,
+        title: '탑에서 리드 팔(왼팔)이 많이 굽어요', detail: `탑에서 왼팔 각도가 ${Math.round(a)}°예요. 스윙 아크가 작아지고 타점이 흔들릴 수 있어요.`, miss: ['slice', 'thin'] });
+      else notes.top.text = `왼팔 ${Math.round(a)}° 유지`;
+    }
+    // 4) 임팩트 손 높이
+    const h0 = hands('address'), h1 = hands('impact');
+    if (h0 && h1) {
+      const up = (h0[1] - h1[1]) / T; measured.handsUp = +up.toFixed(2);
+      if (up > 0.2) add({ id: 'hands_high', phase: 'impact', severity: up > 0.32 ? 2 : 1, short: '손 들림',
+        title: '임팩트 때 손이 어드레스보다 높아요', detail: '몸이 일어나면서 손이 들리면 페이스가 열리고 얇게 맞기 쉬워요.', miss: ['thin', 'slice'] });
+    }
+
+    if (view === 'side') {
+      const f0 = frames[ph.idx.address].lm;
+      let facing = 1;
+      if (f0) { const dx = ((f0[31][0] - f0[29][0]) + (f0[32][0] - f0[30][0])); facing = dx >= 0 ? 1 : -1; }
+      // 5) 얼리 익스텐션
+      const p0 = hipMid('address'), p1 = hipMid('impact');
+      if (p0 && p1) {
+        const dx = (p1[0] - p0[0]) * facing / T; measured.hipToBall = +dx.toFixed(2);
+        if (dx > 0.1) add({ id: 'early_ext', phase: 'impact', severity: dx > 0.18 ? 2 : 1, short: '배치기',
+          title: '골반이 공 쪽으로 밀려요 (얼리 익스텐션)', detail: '다운스윙에서 골반이 앞으로 나오면 공간이 없어져 블록·훅·생크가 나올 수 있어요.', miss: ['push', 'shank', 'hook'] });
+      }
+      // 6) 척추각 유지
+      const sp = (key) => { const s = shMid(key), h = hipMid(key); return s && h ? deg(Math.atan2(Math.abs(s[0] - h[0]), h[1] - s[1])) : null; };
+      const a0 = sp('address'), a1 = sp('impact');
+      if (a0 != null && a1 != null) {
+        const ch = a0 - a1; measured.spineChange = Math.round(ch);
+        if (ch > 8) add({ id: 'posture_loss', phase: 'downswing', severity: ch > 14 ? 2 : 1, short: `척추각 -${Math.round(ch)}°`,
+          title: '다운스윙에서 상체가 일어나요', detail: `척추 기울기가 어드레스 ${Math.round(a0)}° → 임팩트 ${Math.round(a1)}°로 줄었어요.`, miss: ['thin', 'push'] });
+        else notes.address.text = `척추 기울기 ${Math.round(a0)}°`;
+      }
+      // 7) 다운스윙 경로 (오버더탑 / 과한 인-아웃)
+      const hd = hands('downswing');
+      if (hd) {
+        let best = null, bd = 9;
+        for (let i = ph.idx.address; i <= ph.idx.top; i++) {
+          const f = frames[i]; if (!f.lm) continue; const h = handsOf(f.lm, ar);
+          const d = Math.abs(h[1] - hd[1]); if (d < bd) { bd = d; best = h; }
+        }
+        if (best) {
+          const dx = (hd[0] - best[0]) * facing / T; measured.pathShift = +dx.toFixed(2);
+          if (dx > 0.15) add({ id: 'over_top', phase: 'downswing', severity: dx > 0.28 ? 2 : 1, short: '아웃-인 궤도',
+            title: '다운스윙이 바깥에서 들어와요 (오버 더 탑)', detail: '손이 백스윙 때보다 공 쪽(바깥)으로 내려와 아웃-인 궤도가 만들어져요.', miss: ['slice', 'pull'] });
+          else if (dx < -0.3) add({ id: 'inside_out', phase: 'downswing', severity: 1, short: '과한 인-아웃',
+            title: '다운스윙이 너무 안쪽에서 들어와요', detail: '인-아웃이 과하면 푸시나 훅이 나올 수 있어요.', miss: ['hook', 'push'] });
+        }
+      }
+    } else {
+      // 정면(Face-on)
+      const sw0 = shW('address');
+      // 8) 스웨이
+      const p0 = hipMid('address'), pt = hipMid('top');
+      if (p0 && pt && sw0) {
+        const d = Math.abs(pt[0] - p0[0]) / sw0; measured.sway = +d.toFixed(2);
+        if (d > 0.25) add({ id: 'sway', phase: 'backswing', severity: d > 0.4 ? 2 : 1, short: '스웨이',
+          title: '백스윙 때 골반이 옆으로 밀려요 (스웨이)', detail: '회전 대신 옆으로 이동하면 다운스윙에서 되돌아오기 어려워 뒷땅·슬라이스가 생겨요.', miss: ['fat', 'slice'] });
+      }
+      // 9) 어깨 회전
+      const swT = shW('top');
+      if (sw0 && swT) {
+        const r = swT / sw0; measured.shoulderTurn = +r.toFixed(2);
+        if (r > 0.8) add({ id: 'short_turn', phase: 'top', severity: r > 0.9 ? 2 : 1, short: '회전 부족',
+          title: '탑에서 어깨 회전이 부족해요', detail: '정면에서 어깨 폭이 거의 줄지 않았어요. 팔로만 들어 올리면 아웃-인 궤도가 되기 쉬워요.', miss: ['slice', 'pull'] });
+      }
+      // 10) 피니시 체중이동
+      const pf = hipMid('finish'), la = at('finish', lead.an);
+      if (pf && la && sw0) {
+        const d = Math.abs(pf[0] - la[0]) / sw0; measured.finishWeight = +d.toFixed(2);
+        if (d > 0.45) add({ id: 'hang_back', phase: 'finish', severity: 1, short: '체중 뒤에 남음',
+          title: '피니시에서 체중이 뒤에 남아요', detail: '피니시에서 골반이 왼발 위로 오지 않았어요. 체중 이동이 부족하면 뒷땅·탑볼·훅이 생겨요.', miss: ['fat', 'thin', 'hook'] });
+      }
+    }
+    // 11) 캐스팅 (클럽헤드 추정값이 있을 때만, 베타)
+    const fd = frames[ph.idx.downswing];
+    if (fd && fd.club && fd.lm) {
+      const e = P(fd.lm, lead.el, ar), w = P(fd.lm, lead.wr, ar), c = [fd.club[0] * ar, fd.club[1]];
+      const a = angleAt(e, w, c);
+      if (a != null) {
+        measured.lagAngle = Math.round(a);
+        if (a > 155) add({ id: 'casting', phase: 'downswing', severity: 1, short: '손목 일찍 풀림',
+          title: '다운스윙 초반에 손목 각이 빨리 풀려요 (캐스팅)', detail: `다운스윙 중간 손목-샤프트 각이 ${Math.round(a)}°예요(추정). 래깅이 빨리 풀리면 힘이 새고 뒷땅·슬라이스가 생겨요.`, miss: ['fat', 'slice'] });
+      }
+    }
+    // 12) 피니시 유지
+    if (!ph.finishStable) { notes.finish.status = notes.finish.status === 'good' ? 'na' : notes.finish.status; notes.finish.text = notes.finish.text || '피니시 자세가 끝까지 촬영되지 않았어요'; }
+
+    const DEF = { address: '셋업 자세 확인됨', takeaway: '테이크백 확인됨', backswing: '백스윙 확인됨', top: '탑 포지션 확인됨', downswing: '전환 확인됨', impact: '임팩트 확인됨', follow: '팔로우스루 확인됨', finish: '피니시 확인됨' };
+    for (const k in notes) if (!notes[k].text) notes[k].text = DEF[k];
+
+    issues.sort((a, b) => b.severity - a.severity);
+    const score = {};
+    issues.forEach(i => (i.miss || []).forEach((m, j) => score[m] = (score[m] || 0) + i.severity * (j === 0 ? 1.5 : 1)));
+    const miss = Object.keys(score).sort((a, b) => score[b] - score[a])[0] || null;
+    const headline = miss ? A.missMessage(miss, hand) : '큰 문제 없이 안정적인 스윙이에요';
+    const sub = issues.length ? `${issues.length}가지 체크 포인트를 찾았어요` : '지금 리듬을 유지하는 드릴을 추천해 드릴게요';
+    const good = 100 - issues.reduce((s, i) => s + (i.severity === 2 ? 12 : 6), 0);
+    return { issues, notes, headline, sub, miss, measured, score: SL.clamp(good, 40, 100) };
+  };
+
+  // ---------------- 4. 한 번에 분석 ----------------
+  A.analyzeRecord = async (rec, video, onProgress) => {
+    const fps = SL.settings.analysisFps || 30;
+    const r = await A.extract(video, { fps, onProgress });
+    Object.assign(rec, { frames: r.frames, fps: r.fps, ar: r.ar, width: r.width, height: r.height });
+    rec.phases = A.detectPhases(rec.frames, rec.fps, rec.ar);
+    rec.tempo = A.tempo(rec.phases, rec.fps, rec.slow || 1);
+    rec.diagnosis = A.diagnose(rec);
+    rec.analyzed = true;
+    return rec;
+  };
+
+  // ---------------- 5. 연습모드 일관성 ----------------
+  A.consistency = (swings) => {
+    const xs = swings.filter(s => s.tempo && s.tempo.ratio);
+    if (xs.length < 2) return null;
+    const stat = (arr) => { const m = arr.reduce((a, b) => a + b, 0) / arr.length; const sd = Math.sqrt(arr.reduce((a, b) => a + (b - m) ** 2, 0) / arr.length); return { mean: m, sd, cv: m ? sd / Math.abs(m) : 0 }; };
+    const ratio = stat(xs.map(s => s.tempo.ratio)), back = stat(xs.map(s => s.tempo.back)), down = stat(xs.map(s => s.tempo.down));
+    const tops = xs.map(s => s.topHeight).filter(v => v != null);
+    const top = tops.length >= 2 ? stat(tops) : null;
+    let score = 100 - ratio.cv * 250 - back.cv * 120 - down.cv * 120 - (top ? top.sd * 60 : 0);
+    score = Math.round(SL.clamp(score, 0, 100));
+    return { n: xs.length, ratio, back, down, top, score };
+  };
+
+  SL.analyzer = A;
+})(typeof window !== 'undefined' ? window.SL : (globalThis.SL = globalThis.SL || {}));
+
+</script>
+<script>
+// 드릴 데이터베이스: 진단 이슈/미스샷 → 추천 드릴 + 유튜브 검색 키워드
+(function (SL) {
+  const D = (title, desc, mins, q, hue) => ({ title, desc, mins, q, hue });
+  const BY_ISSUE = {
+    head_move: [D('벽에 머리 대고 회전하기', '머리를 벽(또는 우산)에 가볍게 대고 하프스윙 — 축 고정 감각 익히기', 5, '골프 머리 고정 드릴', 150),
+      D('공 뒤쪽 바라보기 드릴', '임팩트 후에도 공이 있던 자리를 0.5초 보고 고개 들기', 5, '골프 헤드업 교정 드릴', 160)],
+    tempo_fast: [D('3:1 메트로놈 템포 드릴', '메트로놈 앱으로 "하나-둘-셋(백) / 넷(다운)" 리듬 연습', 10, '골프 템포 3대1 메트로놈 드릴', 80),
+      D('탑에서 1초 멈췄다 치기', '탑에서 잠깐 멈춘 뒤 하체부터 출발', 5, '골프 탑에서 멈췄다 치기 드릴', 90)],
+    tempo_slow: [D('연속 스윙(펌프) 드릴', '멈추지 않고 백-다운을 이어서 3번 반복해 리듬 만들기', 5, '골프 펌프 드릴 전환', 70)],
+    lead_arm_bent: [D('왼팔 쭉 뻗은 하프스윙', '왼팔 각도를 유지한 채 9시-3시 스윙', 10, '골프 왼팔 펴기 드릴 백스윙', 200),
+      D('타월 겨드랑이 드릴', '양 겨드랑이에 타월을 끼고 팔-몸 일체감 만들기', 5, '골프 타월 드릴 겨드랑이', 210)],
+    hands_high: [D('의자(벽) 엉덩이 터치 드릴', '엉덩이를 뒤 벽에 댄 채로 임팩트까지 유지', 10, '골프 얼리 익스텐션 교정 벽 드릴', 20),
+      D('손 낮게 임팩트 드릴', '임팩트 때 손이 왼쪽 허벅지 앞을 지나가게', 5, '골프 핸드퍼스트 임팩트 드릴', 30)],
+    early_ext: [D('엉덩이 벽 터치 드릴', '어드레스 때 엉덩이가 닿은 벽에 임팩트까지 계속 닿기', 10, '골프 배치기 교정 드릴', 10),
+      D('의자 드릴', '엉덩이 뒤에 의자를 두고 스윙 중 의자에서 떨어지지 않기', 10, '골프 얼리 익스텐션 의자 드릴', 0)],
+    posture_loss: [D('척추각 유지 스틱 드릴', '등에 스틱을 대고 척추 기울기를 유지하며 회전', 10, '골프 척추각 유지 드릴', 260),
+      D('왼쪽 무릎 굽힘 유지', '다운스윙에서 왼무릎이 펴지지 않게 하프스윙', 5, '골프 상체 들림 교정', 270)],
+    over_top: [D('헤드 커버(게이트) 드릴', '공 바깥쪽 앞에 헤드커버를 두고 맞히지 않게 인-아웃 스윙', 10, '골프 오버더탑 교정 헤드커버 드릴', 0),
+      D('오른 팔꿈치 옆구리 붙이기', '다운스윙 시작에 오른팔꿈치가 옆구리로 떨어지게', 10, '골프 슬라이스 교정 오른팔꿈치 드릴', 350),
+      D('클럽페이스 컨트롤 드릴', '하프스윙에서 페이스를 스퀘어로 맞추는 감각', 10, '클럽 페이스 컨트롤 드릴', 120)],
+    inside_out: [D('정렬봉 스윙 경로 드릴', '정렬봉 2개로 스윙 길을 만들고 스퀘어 경로 익히기', 10, '골프 정렬봉 스윙궤도 드릴', 190)],
+    sway: [D('오른발 바깥 막대 드릴', '오른발 바깥에 막대를 세우고 골반이 닿지 않게 회전', 10, '골프 스웨이 교정 드릴', 40),
+      D('오른 무릎 고정 드릴', '오른 무릎 각도를 탑까지 유지', 5, '골프 백스윙 스웨이 오른무릎', 50)],
+    short_turn: [D('클럽 어깨에 걸고 회전', '클럽을 어깨에 걸고 왼어깨가 턱 밑까지 오게 회전', 5, '골프 어깨회전 늘리기 드릴', 220),
+      D('등이 타겟 보기 드릴', '탑에서 등이 목표 방향을 보게 몸통 회전', 5, '골프 백스윙 꼬임 드릴', 230)],
+    hang_back: [D('스텝 스루 드릴', '피니시에서 오른발을 앞으로 한 발 내딛기', 10, '골프 체중이동 스텝 드릴', 100),
+      D('왼발 피니시 3초 유지', '피니시를 왼발 위에서 3초 동안 유지', 5, '골프 피니시 밸런스 드릴', 110)],
+    casting: [D('펌프 드릴 (래깅)', '탑→허리 높이까지 내려오며 손목 각 유지, 3번 반복 후 스윙', 10, '골프 래깅 펌프 드릴 캐스팅 교정', 300),
+      D('오른손 손등 각 유지', '다운스윙 중간까지 오른손목 각을 유지', 5, '골프 캐스팅 교정 손목 드릴', 310)],
+  };
+  const BY_MISS = {
+    slice: [D('스트롱 그립 점검', '왼손 너클 2~3개 보이게 그립 점검', 3, '골프 슬라이스 그립 교정', 0), BY_ISSUE.over_top[0]],
+    hook: [D('그립 압력·페이스 점검', '그립을 중립으로 하고 페이스 로테이션 줄이기', 5, '골프 훅 교정 드릴', 30)],
+    push: [D('몸통 회전으로 릴리스', '임팩트 후 가슴이 타겟을 보게 끝까지 회전', 5, '골프 푸시 교정 드릴', 60)],
+    pull: [D('타겟 오른쪽 출발 드릴', '공 앞 정렬봉 오른쪽으로 공을 출발시키기', 5, '골프 풀샷 교정', 180)],
+    fat: [D('수건 뒤땅 방지 드릴', '공 10cm 뒤에 수건을 두고 건드리지 않고 치기', 10, '골프 뒷땅 교정 수건 드릴', 40)],
+    thin: [D('디봇 앞쪽 만들기', '공 앞쪽 잔디가 파이게 다운블로 연습', 10, '골프 탑볼 교정 드릴', 280)],
+    shank: [D('토(앞쪽) 타격 드릴', '공 바깥에 티를 꽂고 티를 안 건드리게 치기', 10, '골프 생크 교정 드릴', 330)],
+  };
+  const GENERAL = [D('9-3 하프스윙 컨트롤', '9시-3시 크기로 정타 컨택 감각 만들기', 10, '골프 9시 3시 스윙 드릴', 90),
+    D('한 발 피니시 밸런스', '피니시를 3초 유지하며 균형 체크', 5, '골프 밸런스 드릴', 140)];
+
+  SL.drills = {
+    BY_ISSUE, BY_MISS, GENERAL,
+    yt: (q) => 'https://www.youtube.com/results?search_query=' + encodeURIComponent(q),
+    // 진단 + 사용자가 고른 미스샷 → 중복 없이 추천
+    recommend(diag, userMiss = []) {
+      const out = [], seen = new Set();
+      const push = (d, why) => { if (d && !seen.has(d.title)) { seen.add(d.title); out.push({ ...d, why }); } };
+      (diag?.issues || []).forEach(i => (BY_ISSUE[i.id] || []).forEach(d => push(d, i.short)));
+      userMiss.forEach(m => (BY_MISS[m] || []).forEach(d => push(d, SL.analyzer.MISS[m])));
+      if (out.length < 3) GENERAL.forEach(d => push(d, '기본기'));
+      return out;
+    },
+    all() {
+      const list = []; const seen = new Set();
+      Object.entries(BY_ISSUE).forEach(([k, arr]) => arr.forEach(d => { if (!seen.has(d.title)) { seen.add(d.title); list.push({ ...d, cat: k }); } }));
+      Object.entries(BY_MISS).forEach(([k, arr]) => arr.forEach(d => { if (!seen.has(d.title)) { seen.add(d.title); list.push({ ...d, cat: k }); } }));
+      GENERAL.forEach(d => { if (!seen.has(d.title)) list.push({ ...d, cat: 'general' }); });
+      return list;
+    },
+    card(d) {
+      return `<a class="drill" href="${SL.drills.yt(d.q)}" target="_blank" rel="noopener">
+        <div class="dt" style="background:linear-gradient(135deg,hsl(${d.hue},55%,32%),hsl(${(d.hue + 40) % 360},50%,16%))">${SL.icon('youtube')}<span class="len">${d.mins}분</span></div>
+        <div class="dm"><b>${SL.esc(d.title)}</b><span>${SL.esc(d.desc)}</span>${d.why ? `<span class="badge acc" style="margin-top:4px">${SL.esc(d.why)}</span>` : ''}</div>
+        <span class="chev">${SL.icon('chev')}</span></a>`;
+    },
+  };
+})(window.SL);
+
+</script>
+<script>
+// 영상 위 그리기 레이어: 직선 / 원(크기 조절) / 색상 / 보이기 토글 / 되돌리기
+(function (SL) {
+  SL.COLORS = [
+    { name: '빨강', v: '#FF453A' }, { name: '파랑', v: '#0A84FF' }, { name: '노랑', v: '#FFD60A' },
+    { name: '흰색', v: '#FFFFFF' }, { name: '검정', v: '#000000' },
+  ];
+
+  class DrawLayer {
+    constructor(canvas, onChange) {
+      this.cv = canvas; this.ctx = canvas.getContext('2d');
+      this.shapes = []; this.tool = null; this.color = SL.COLORS[0].v; this.visible = true;
+      this.cur = null; this.edit = null; this.onChange = onChange || (() => {});
+      const opt = { passive: false };
+      canvas.addEventListener('pointerdown', e => this.down(e), opt);
+      canvas.addEventListener('pointermove', e => this.move(e), opt);
+      canvas.addEventListener('pointerup', e => this.up(e));
+      canvas.addEventListener('pointercancel', e => this.up(e));
+      this.ro = new ResizeObserver(() => this.resize()); this.ro.observe(canvas);
+    }
+    destroy() { this.ro.disconnect(); }
+    setTool(t) { this.tool = t; this.cv.classList.toggle('active', !!t); if (t && !this.visible) this.setVisible(true); }
+    setVisible(v) { this.visible = v; this.draw(); this.onChange(); }
+    resize() {
+      const r = this.cv.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+      this.cv.width = Math.max(1, Math.round(r.width * dpr)); this.cv.height = Math.max(1, Math.round(r.height * dpr));
+      this.draw();
+    }
+    W() { return this.cv.width; } H() { return this.cv.height; }
+    pos(e) { const r = this.cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; }
+    px(p) { return [p[0] * this.W(), p[1] * this.H()]; }
+    hit(p) {
+      const tol = 16 * (window.devicePixelRatio || 1), P = this.px(p);
+      for (let i = this.shapes.length - 1; i >= 0; i--) {
+        const s = this.shapes[i];
+        if (s.type === 'circle') {
+          const c = this.px([s.x, s.y]), r = s.r * this.W(), d = Math.hypot(P[0] - c[0], P[1] - c[1]);
+          if (Math.abs(d - r) < tol) return { s, mode: 'radius' };
+          if (d < tol) return { s, mode: 'move', off: [p[0] - s.x, p[1] - s.y] };
+        } else {
+          const a = this.px([s.x1, s.y1]), b = this.px([s.x2, s.y2]);
+          if (Math.hypot(P[0] - a[0], P[1] - a[1]) < tol) return { s, mode: 'p1' };
+          if (Math.hypot(P[0] - b[0], P[1] - b[1]) < tol) return { s, mode: 'p2' };
+        }
+      }
+      return null;
+    }
+    down(e) {
+      if (!this.tool) return;
+      e.preventDefault(); this.cv.setPointerCapture(e.pointerId);
+      const p = this.pos(e);
+      this.edit = this.hit(p);
+      if (this.edit) return;
+      this.cur = this.tool === 'circle' ? { type: 'circle', x: p[0], y: p[1], r: 0, color: this.color }
+        : { type: 'line', x1: p[0], y1: p[1], x2: p[0], y2: p[1], color: this.color };
+    }
+    move(e) {
+      if (!this.cur && !this.edit) return;
+      e.preventDefault();
+      const p = this.pos(e), ar = this.H() / this.W();
+      if (this.edit) {
+        const { s, mode } = this.edit;
+        if (mode === 'radius') s.r = Math.hypot(p[0] - s.x, (p[1] - s.y) * ar);
+        else if (mode === 'move') { s.x = p[0] - this.edit.off[0]; s.y = p[1] - this.edit.off[1]; }
+        else if (mode === 'p1') { s.x1 = p[0]; s.y1 = p[1]; } else { s.x2 = p[0]; s.y2 = p[1]; }
+      } else if (this.cur.type === 'circle') this.cur.r = Math.hypot(p[0] - this.cur.x, (p[1] - this.cur.y) * ar);
+      else { this.cur.x2 = p[0]; this.cur.y2 = p[1]; }
+      this.draw();
+    }
+    up() {
+      if (this.cur) {
+        const c = this.cur, big = c.type === 'circle' ? c.r > 0.01 : Math.hypot(c.x2 - c.x1, c.y2 - c.y1) > 0.01;
+        if (big) this.shapes.push(c);
+      }
+      this.cur = null; this.edit = null; this.draw(); this.onChange();
+    }
+    undo() { this.shapes.pop(); this.draw(); this.onChange(); }
+    clear() { this.shapes = []; this.draw(); this.onChange(); }
+    draw() {
+      const ctx = this.ctx, W = this.W(), H = this.H(), dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, W, H);
+      if (!this.visible) return;
+      const all = this.cur ? [...this.shapes, this.cur] : this.shapes;
+      ctx.lineCap = 'round'; ctx.lineWidth = 3 * dpr;
+      for (const s of all) {
+        ctx.strokeStyle = s.color;
+        ctx.shadowColor = s.color === '#000000' ? 'rgba(255,255,255,.5)' : 'rgba(0,0,0,.5)'; ctx.shadowBlur = 3 * dpr;
+        ctx.beginPath();
+        if (s.type === 'circle') ctx.arc(s.x * W, s.y * H, s.r * W, 0, Math.PI * 2);
+        else { ctx.moveTo(s.x1 * W, s.y1 * H); ctx.lineTo(s.x2 * W, s.y2 * H); }
+        ctx.stroke();
+        // 편집 핸들
+        if (this.tool) {
+          ctx.shadowBlur = 0; ctx.fillStyle = '#fff';
+          const hs = s.type === 'circle' ? [[s.x * W + s.r * W, s.y * H]] : [[s.x1 * W, s.y1 * H], [s.x2 * W, s.y2 * H]];
+          hs.forEach(([x, y]) => { ctx.beginPath(); ctx.arc(x, y, 4.5 * dpr, 0, 7); ctx.fill(); });
+        }
+      }
+      ctx.shadowBlur = 0;
+    }
+  }
+
+  // 툴바 HTML + 바인딩 (재생 화면/비교 화면 공용)
+  SL.drawToolbar = (layer, root) => {
+    const el = SL.h(`<div class="toolrow">
+      <button class="tool" data-t="line">${SL.icon('line')}직선</button>
+      <button class="tool" data-t="circle">${SL.icon('circle')}원</button>
+      <div class="palette">${SL.COLORS.map((c, i) => `<button data-c="${c.v}" title="${c.name}" style="background:${c.v}" class="${i ? '' : 'on'}"></button>`).join('')}</div>
+      <button class="tool" data-a="vis" title="그림 보이기/숨기기">${SL.icon('eye')}</button>
+      <button class="tool" data-a="undo" title="되돌리기">${SL.icon('undo')}</button>
+      <button class="tool" data-a="clear" title="모두 지우기">${SL.icon('trash')}</button>
+    </div>`);
+    const sync = () => {
+      SL.$$('[data-t]', el).forEach(b => b.classList.toggle('on', layer.tool === b.dataset.t));
+      SL.$$('[data-c]', el).forEach(b => b.classList.toggle('on', layer.color === b.dataset.c));
+      SL.$('[data-a=vis]', el).innerHTML = SL.icon(layer.visible ? 'eye' : 'eyeoff');
+    };
+    el.addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.t) layer.setTool(layer.tool === b.dataset.t ? null : b.dataset.t);
+      if (b.dataset.c) { layer.color = b.dataset.c; if (!layer.tool) layer.setTool('line'); }
+      if (b.dataset.a === 'vis') layer.setVisible(!layer.visible);
+      if (b.dataset.a === 'undo') layer.undo();
+      if (b.dataset.a === 'clear') layer.clear();
+      sync();
+    });
+    sync(); root && root.appendChild(el);
+    return el;
+  };
+
+  SL.DrawLayer = DrawLayer;
+})(window.SL);
+
+</script>
+<script>
+// 스윙 플레이어: 배속(0.25~1x) · 프레임 이동 · 스윙 궤적(백/다운 색 구분) · 스켈레톤 · 구간 점프 · 그리기
+(function (SL) {
+  const COL_BACK = '#40C8E0', COL_DOWN = '#FF453A', COL_SKEL = '#C6F432';
+
+  class SwingPlayer {
+    constructor(root, rec, url) {
+      this.rec = rec; this.url = url; this.speed = 0.5;
+      this.showTracer = true; this.showSkel = false;
+      this.source = rec.frames && rec.frames.some(f => f.club) ? 'club' : 'hands';
+      const ph = rec.phases;
+      this.el = SL.h(`<div class="sp">
+        <div class="sp-stagewrap"><div class="sp-stage">
+          <video loop muted playsinline webkit-playsinline preload="auto"></video>
+          <canvas class="ov"></canvas><canvas class="draw"></canvas>
+          <div class="sp-hud"><span class="spd">0.5x</span><span class="phn" style="display:none"></span></div>
+        </div></div>
+        <div class="sp-ctrl">
+          <div class="sp-time"><input type="range" min="0" max="1000" value="0" step="1"><span class="t">0:00.00</span></div>
+          <div class="sp-main">
+            <div class="transport">
+              <button class="tbtn" data-a="prev" title="이전 프레임">${SL.icon('prev')}</button>
+              <button class="tbtn play" data-a="play">${SL.icon('play')}</button>
+              <button class="tbtn" data-a="next" title="다음 프레임">${SL.icon('next')}</button>
+            </div>
+            <div class="speeds">${[0.25, 0.5, 0.75, 1].map(s => `<button data-s="${s}" class="${s === 0.5 ? 'on' : ''}">${s}x</button>`).join('')}</div>
+          </div>
+          <div class="phases">${SL.JUMP_PHASES.map(k => `<button data-p="${k}" ${ph ? '' : 'disabled'}>${SL.phaseName(k)}<small>${ph ? ph.t[k].toFixed(2) + 's' : '-'}</small></button>`).join('')}</div>
+          <div class="toolrow">
+            <button class="tool acc on" data-a="tracer" ${rec.frames ? '' : 'disabled'}>${SL.icon('tracer')}궤적</button>
+            <button class="tool" data-a="src" ${rec.frames ? '' : 'disabled'}>${this.source === 'club' ? '클럽헤드 β' : '손 경로'}</button>
+            <button class="tool" data-a="skel" ${rec.frames ? '' : 'disabled'}>${SL.icon('skeleton')}관절</button>
+            <span class="legend" style="margin-left:auto"><span><i style="background:${COL_BACK}"></i>백스윙</span><span><i style="background:${COL_DOWN}"></i>다운스윙</span></span>
+          </div>
+          <div class="draw-tools"></div>
+        </div>
+      </div>`);
+      root.appendChild(this.el);
+      this.v = SL.$('video', this.el); this.stage = SL.$('.sp-stage', this.el);
+      this.ov = SL.$('canvas.ov', this.el); this.octx = this.ov.getContext('2d');
+      this.layer = new SL.DrawLayer(SL.$('canvas.draw', this.el));
+      SL.drawToolbar(this.layer, SL.$('.draw-tools', this.el));
+      this.range = SL.$('input[type=range]', this.el); this.tEl = SL.$('.t', this.el);
+      this.bind();
+      this.ready = SL.loadVideo(this.v, url).then(() => { this.v.playbackRate = this.speed; this.fit(); });
+      this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(SL.$('.sp-stagewrap', this.el));
+      const loop = () => { this.paint(); this.raf = requestAnimationFrame(loop); }; loop();
+    }
+
+    bind() {
+      this.el.addEventListener('click', (e) => {
+        const b = e.target.closest('button'); if (!b || b.disabled) return;
+        if (b.dataset.s) this.setSpeed(+b.dataset.s);
+        if (b.dataset.p) this.jump(b.dataset.p);
+        const a = b.dataset.a;
+        if (a === 'play') this.toggle();
+        if (a === 'prev') this.step(-1);
+        if (a === 'next') this.step(1);
+        if (a === 'tracer') { this.showTracer = !this.showTracer; b.classList.toggle('on', this.showTracer); }
+        if (a === 'skel') { this.showSkel = !this.showSkel; b.classList.toggle('on', this.showSkel); }
+        if (a === 'src') {
+          if (!this.rec.frames.some(f => f.club)) { SL.toast('클럽헤드를 찾지 못한 영상이에요 — 손 경로로 표시해요'); return; }
+          this.source = this.source === 'club' ? 'hands' : 'club'; b.textContent = this.source === 'club' ? '클럽헤드 β' : '손 경로';
+        }
+      });
+      this.stage.addEventListener('click', (e) => { if (!this.layer.tool && e.target.tagName !== 'BUTTON') this.toggle(); });
+      this.range.addEventListener('input', () => { this.v.pause(); this.v.currentTime = this.range.value / 1000 * (this.v.duration || 0); });
+      this.v.addEventListener('play', () => SL.$('[data-a=play]', this.el).innerHTML = SL.icon('pause'));
+      this.v.addEventListener('pause', () => SL.$('[data-a=play]', this.el).innerHTML = SL.icon('play'));
+    }
+
+    fit() {
+      const wrap = SL.$('.sp-stagewrap', this.el), vw = this.v.videoWidth || 9, vh = this.v.videoHeight || 16, ar = vw / vh;
+      const W = wrap.clientWidth, maxH = Math.max(260, window.innerHeight * 0.56);
+      let w = Math.min(W, maxH * ar), h = w / ar;
+      this.stage.style.width = w + 'px'; this.stage.style.height = h + 'px';
+      const dpr = window.devicePixelRatio || 1;
+      this.ov.width = Math.round(w * dpr); this.ov.height = Math.round(h * dpr);
+    }
+
+    toggle() { if (this.v.paused) this.v.play().catch(() => {}); else this.v.pause(); }
+    setSpeed(s) {
+      this.speed = s; this.v.playbackRate = s;
+      SL.$$('[data-s]', this.el).forEach(b => b.classList.toggle('on', +b.dataset.s === s));
+      SL.$('.spd', this.el).textContent = s + 'x';
+    }
+    step(d) {
+      this.v.pause();
+      const fps = this.rec.fps || SL.settings.frameStep || 30;
+      this.v.currentTime = SL.clamp(this.v.currentTime + d / fps, 0, Math.max(0, (this.v.duration || 0) - 0.001));
+    }
+    jump(k) {
+      const ph = this.rec.phases; if (!ph) return;
+      this.v.pause(); this.v.currentTime = ph.t[k] + 0.001;
+      SL.$$('[data-p]', this.el).forEach(b => b.classList.toggle('on', b.dataset.p === k));
+    }
+    get idx() { const f = this.rec.frames; if (!f) return 0; return SL.clamp(Math.round(this.v.currentTime * (this.rec.fps || 30)), 0, f.length - 1); }
+
+    paint() {
+      const v = this.v, d = v.duration || 0;
+      if (d) { if (document.activeElement !== this.range) this.range.value = Math.round(v.currentTime / d * 1000); this.tEl.textContent = `${SL.fmtTime(v.currentTime)} / ${SL.fmtTime(d)}`; }
+      const ctx = this.octx, W = this.ov.width, H = this.ov.height, dpr = window.devicePixelRatio || 1;
+      ctx.clearRect(0, 0, W, H);
+      const fr = this.rec.frames; if (!fr || !fr.length) return;
+      const i = this.idx, ph = this.rec.phases;
+      // 현재 구간 표시
+      const hud = SL.$('.phn', this.el);
+      if (ph) {
+        let cur = null; SL.PHASES.forEach(p => { if (i >= ph.idx[p.key]) cur = p.key; });
+        if (i < ph.idx.address) cur = null;
+        hud.style.display = cur ? '' : 'none'; if (cur) hud.textContent = SL.phaseName(cur);
+      }
+      const pt = (f) => {
+        if (!f) return null;
+        if (this.source === 'club' && f.club) return [f.club[0] * W, f.club[1] * H];
+        if (this.source === 'hands' && f.lm) { const a = f.lm[15], b = f.lm[16]; return [(a[0] + b[0]) / 2 * W, (a[1] + b[1]) / 2 * H]; }
+        return null;
+      };
+      if (this.showTracer) {
+        const seg = (a, b, col) => {
+          if (b < a) return;
+          ctx.strokeStyle = col; ctx.lineWidth = 4 * dpr; ctx.lineJoin = ctx.lineCap = 'round';
+          ctx.shadowColor = col; ctx.shadowBlur = 10 * dpr;
+          ctx.beginPath(); let pen = false;
+          for (let k = a; k <= b; k++) { const p = pt(fr[k]); if (!p) { pen = false; continue; } if (!pen) { ctx.moveTo(p[0], p[1]); pen = true; } else ctx.lineTo(p[0], p[1]); }
+          ctx.stroke(); ctx.shadowBlur = 0;
+        };
+        if (ph) {
+          seg(ph.idx.address, Math.min(i, ph.idx.top), COL_BACK);
+          if (i > ph.idx.top) seg(ph.idx.top, Math.min(i, ph.idx.finish), COL_DOWN);
+        } else seg(0, i, COL_DOWN);
+        const p = pt(fr[i]);
+        if (p) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 5 * dpr, 0, 7); ctx.fill(); }
+      }
+      if (this.showSkel && fr[i] && fr[i].lm) SwingPlayer.skeleton(ctx, fr[i].lm, W, H, dpr);
+    }
+
+    static skeleton(ctx, lm, W, H, dpr = 1, col = COL_SKEL) {
+      ctx.strokeStyle = col; ctx.lineWidth = 2.5 * dpr; ctx.lineCap = 'round';
+      SL.pose.EDGES.forEach(([a, b]) => {
+        if (!lm[a] || !lm[b] || lm[a][2] < 0.3 || lm[b][2] < 0.3) return;
+        ctx.beginPath(); ctx.moveTo(lm[a][0] * W, lm[a][1] * H); ctx.lineTo(lm[b][0] * W, lm[b][1] * H); ctx.stroke();
+      });
+      ctx.fillStyle = '#fff';
+      [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(k => {
+        if (!lm[k] || lm[k][2] < 0.3) return; ctx.beginPath(); ctx.arc(lm[k][0] * W, lm[k][1] * H, 3.2 * dpr, 0, 7); ctx.fill();
+      });
+    }
+
+    destroy() { cancelAnimationFrame(this.raf); this.ro.disconnect(); this.layer.destroy(); this.v.pause(); this.v.removeAttribute('src'); this.v.load(); }
+  }
+  SL.SwingPlayer = SwingPlayer;
+})(window.SL);
+
+</script>
+<script>
+// 홈 화면
+(function (SL) {
+  const golferSVG = `<svg class="golfer" viewBox="0 0 150 160" fill="none" stroke="#C6F432" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="70" cy="30" r="11" fill="#C6F432" fill-opacity=".12"/>
+    <path d="M70 42 74 82"/><path d="M72 52 96 40 118 14"/><path d="M72 54 92 46"/>
+    <path d="M74 82 60 118 52 152"/><path d="M74 82 90 116 100 152"/>
+    <path d="M118 14 131 6" stroke="#fff" stroke-width="2"/>
+    <path d="M18 120C30 70 80 20 128 8" stroke="#fff" stroke-opacity=".25" stroke-width="2" stroke-dasharray="3 6"/>
+    <circle cx="36" cy="153" r="3.5" fill="#fff" stroke="none"/>
+  </svg>`;
+
+  const QUICK = [
+    { i: 'upload', t: '업로드', href: '#/analyze', hl: true },
+    { i: 'camera', t: '연습모드', href: '#/practice' },
+    { i: 'chart', t: '스윙분석', href: '#/records' },
+    { i: 'compare', t: '비교', href: '#/compare' },
+    { i: 'ai', t: 'AI 진단', href: '#/report' },
+    { i: 'drill', t: '드릴', href: '#/drills' },
+    { i: 'trophy', t: '대회', href: '#/tour' },
+    { i: 'cart', t: '스토어', href: '#/store' },
+  ];
+
+  SL.recCard = (r) => `<a class="rec" href="#/analyze?id=${r.id}">
+      <div class="th ${r.thumb ? '' : 'ph'}" style="${r.thumb ? `background-image:url(${r.thumb})` : ''}">${r.thumb ? '' : SL.icon('club')}</div>
+      <div class="meta"><b>${SL.esc(r.club || '스윙')} ${r.source === 'practice' ? '<span class="badge">연습</span>' : ''}</b>
+        <span>${SL.fmtDate(r.createdAt)}${r.tempo && r.tempo.ratio ? ` · 템포 ${r.tempo.ratio}:1` : ''}</span><br>
+        <span class="${r.diagnosis && r.diagnosis.issues.length ? '' : 'dim'}">${r.diagnosis ? SL.esc(r.diagnosis.headline) : '분석 전'}</span></div>
+      <span class="go">${SL.icon('play')}</span></a>`;
+
+  SL.route('home', async (view) => {
+    const list = await SL.db.all();
+    const tempos = list.filter(r => r.tempo && r.tempo.ratio).map(r => r.tempo.ratio);
+    const avg = tempos.length ? (tempos.reduce((a, b) => a + b, 0) / tempos.length).toFixed(1) : '-';
+    view.innerHTML = `
+      <div class="topbar">${SL.logo()}
+        <div class="row"><a class="icon-btn" href="#/drills">${SL.icon('search')}</a><button class="icon-btn" id="bell">${SL.icon('bell')}</button></div>
+      </div>
+      <a class="hero" href="#/more" style="display:block">
+        <div class="who">${SL.esc(SL.settings.name)}님 ${SL.icon('chev')}</div>
+        <div class="small muted" style="margin-top:4px">오늘도 한 스윙씩 좋아지는 중</div>
+        <div class="hero-stats">
+          <div><b>${list.length}</b><span>스윙 기록</span></div>
+          <div><b>${avg}${avg !== '-' ? '<small style="font-size:13px">:1</small>' : ''}</b><span>평균 템포</span></div>
+        </div>
+        ${golferSVG}
+      </a>
+      <div class="quick">${QUICK.map(q => `<a href="${q.href}"><span class="qi ${q.hl ? 'hl' : ''}">${SL.icon(q.i)}</span>${q.t}</a>`).join('')}</div>
+      <h2 class="sec">최근 분석 <a href="#/records">더보기 ›</a></h2>
+      <div id="recent">${list.length ? list.slice(0, 3).map(SL.recCard).join('') : `
+        <div class="card empty">${SL.icon('upload')}첫 스윙 영상을 올려 보세요<br><a class="btn primary sm" style="margin-top:14px" href="#/analyze">영상 업로드</a></div>`}</div>
+      <h2 class="sec">곧 추가될 기능</h2>
+      <div class="grid3">
+        <a class="card" href="#/shotdata"><span class="badge acc">준비중</span><div style="margin-top:8px;font-weight:700;font-size:14px">샷데이터</div><div class="tiny muted">카메라로 측정</div></a>
+        <a class="card" href="#/tour"><span class="badge acc">준비중</span><div style="margin-top:8px;font-weight:700;font-size:14px">대회정보</div><div class="tiny muted">PGA·KPGA 등</div></a>
+        <a class="card" href="#/store"><span class="badge acc">준비중</span><div style="margin-top:8px;font-weight:700;font-size:14px">스토어</div><div class="tiny muted">용품 모아보기</div></a>
+      </div>`;
+    SL.$('#bell', view).onclick = () => SL.toast('새 알림이 없어요');
+  });
+})(window.SL);
+
+</script>
+<script>
+// 스윙 분석: 업로드 → 자동 분석 → 플레이어 + 템포
+(function (SL) {
+  const progressOverlay = (title) => {
+    const o = SL.h(`<div class="overlay"><div class="box"><div class="spinner"></div>
+      <div style="margin-top:18px;font-weight:700;font-size:17px" class="ot">${title}</div>
+      <div class="bar"><i></i></div><div class="small muted op">준비 중…</div></div></div>`);
+    document.body.appendChild(o);
+    return {
+      set(p, msg) { SL.$('.bar i', o).style.width = Math.round(p * 100) + '%'; if (msg) SL.$('.op', o).textContent = msg; },
+      close() { o.remove(); },
+    };
+  };
+
+  // 레코드 분석 실행 (업로드 직후 / 연습모드 클립 재분석 공용)
+  SL.runAnalysis = async (rec) => {
+    const ov = progressOverlay('스윙을 분석하고 있어요');
+    const v = document.createElement('video');
+    v.style.cssText = 'position:fixed;left:-9999px;width:2px;height:2px'; document.body.appendChild(v);
+    const url = URL.createObjectURL(rec.blob);
+    try {
+      await SL.loadVideo(v, url);
+      if (v.duration > 15) SL.toast('앞 15초까지만 분석해요. 스윙 구간만 잘라서 올리면 더 정확해요', 3500);
+      ov.set(0.02, 'AI 자세 인식 모델 불러오는 중…');
+      await SL.pose.get('full');
+      await SL.analyzer.analyzeRecord(rec, v, p => ov.set(0.05 + p * 0.9, `프레임 분석 ${Math.round(p * 100)}%`));
+      ov.set(0.97, '진단 정리 중…');
+      const tt = rec.phases ? rec.phases.t.top : v.duration / 2;
+      await SL.seek(v, tt); rec.thumb = SL.thumbOf(v) || rec.thumb;
+      if (!rec.phases) SL.toast('스윙 구간을 찾지 못했어요 — 전신이 보이게 다시 촬영해 보세요', 3500);
+    } catch (e) {
+      console.error(e);
+      if (!rec.thumb) { try { await SL.seek(v, Math.min(1, v.duration / 2)); rec.thumb = SL.thumbOf(v); } catch (_) {} }
+      SL.toast('AI 모델을 불러오지 못했어요(인터넷 확인). 영상은 저장됐어요', 3500);
+    } finally {
+      await SL.db.put(rec);
+      ov.close(); URL.revokeObjectURL(url); v.remove();
+    }
+    return rec;
+  };
+
+  function uploadView(view) {
+    const st = { view: 'side', club: '드라이버', slow: 1 };
+    view.innerHTML = `${SL.pageHead('스윙 업로드')}
+      <label class="drop" for="file">${SL.icon('upload')}<b>스윙 영상 선택</b>
+        <div class="small muted" style="margin-top:6px">어드레스~피니시가 담긴 3~10초 영상이 가장 좋아요</div></label>
+      <input id="file" type="file" accept="video/*" hidden>
+      <div class="field"><label class="lb">촬영 방향</label>
+        <div class="seg" id="view"><button data-v="side" class="on">측면 (후방, DTL)</button><button data-v="front">정면 (Face-on)</button></div></div>
+      <div class="field"><label class="lb">클럽</label><div class="chips" id="club">${SL.CLUBS.map((c, i) => `<button class="chip ${i ? '' : 'on'}" data-c="${c}">${c}</button>`).join('')}</div></div>
+      <div class="field"><label class="lb">영상 종류 (템포 계산 보정)</label>
+        <div class="seg" id="slow"><button data-s="1" class="on">일반 속도</button><button data-s="4">슬로모 120fps</button><button data-s="8">슬로모 240fps</button></div></div>
+      <div class="card" style="margin-top:20px">
+        <div style="font-weight:700;margin-bottom:6px">촬영 팁</div>
+        <div class="tip"><i>1</i>삼각대로 고정 — 카메라가 움직이면 궤적이 틀어져요</div>
+        <div class="tip"><i>2</i>머리부터 발끝, 클럽 끝까지 화면 안에</div>
+        <div class="tip"><i>3</i>측면은 손 높이, 타겟 라인 뒤에서 촬영</div>
+      </div>
+      <a class="btn ghost block" style="margin-top:12px" href="#/compare">${SL.icon('compare')}내 스윙 vs 프로 스윙 비교하기</a>`;
+    const segBind = (id, key, attr, num) => SL.$('#' + id, view).addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      st[key] = num ? +b.dataset[attr] : b.dataset[attr];
+      SL.$$('button', b.parentElement).forEach(x => x.classList.toggle('on', x === b));
+    });
+    segBind('view', 'view', 'v'); segBind('club', 'club', 'c'); segBind('slow', 'slow', 's', true);
+    SL.$('#file', view).addEventListener('change', async (e) => {
+      const f = e.target.files[0]; if (!f) return;
+      const rec = { id: SL.uid(), createdAt: Date.now(), source: 'upload', title: f.name, blob: f, view: st.view, club: st.club, slow: st.slow, hand: SL.settings.hand };
+      await SL.runAnalysis(rec);
+      SL.go('analyze', { id: rec.id });
+    });
+  }
+
+  SL.route('analyze', async (view, params) => {
+    if (!params.id) { uploadView(view); return; }
+    const rec = await SL.db.get(params.id);
+    if (!rec) { view.innerHTML = SL.pageHead('스윙분석') + '<div class="empty">기록을 찾을 수 없어요</div>'; return; }
+    const url = SL.blobUrl(rec);
+    view.innerHTML = SL.pageHead('스윙분석', { right: `<button class="icon-btn" id="del">${SL.icon('trash')}</button>` });
+    const player = new SL.SwingPlayer(view, rec, url);
+    if (params.p && rec.phases) player.ready.then(() => player.jump(params.p));
+    const t = rec.tempo, d = rec.diagnosis;
+    const info = SL.h(`<div>
+      <div class="row small muted" style="margin-top:16px;gap:6px;flex-wrap:wrap">
+        <span class="badge">${SL.esc(rec.club || '-')}</span><span class="badge">${rec.view === 'front' ? '정면' : '측면'}</span>
+        ${rec.source === 'practice' ? '<span class="badge">연습모드</span>' : ''}<span>${SL.fmtDate(rec.createdAt)}</span></div>
+      ${t ? `<div class="metrics">
+          <div class="metric hl"><span>스윙 템포</span><b>${t.ratio}<small>: 1</small></b></div>
+          <div class="metric"><span>백스윙</span><b>${t.back}<small>s</small></b></div>
+          <div class="metric"><span>다운스윙</span><b>${t.down}<small>s</small></b></div></div>
+        <div class="tempo-bar"><i style="width:${t.back / (t.back + t.down) * 100}%;background:#40C8E0"></i><i style="width:${t.down / (t.back + t.down) * 100}%;background:#FF453A"></i></div>
+        <div class="tiny muted" style="margin-top:6px">투어 프로 평균 약 3:1 (백스윙 0.7~0.9초 / 다운스윙 0.25~0.3초)${rec.slow > 1 ? ` · 슬로모 ×${rec.slow} 보정됨` : ''}</div>` : ''}
+      ${d ? `<a class="ai-result" href="#/report?id=${rec.id}" style="margin-top:16px">
+          <span class="ai-badge">AI</span><div style="flex:1"><b>${SL.esc(d.headline)}</b><p>${SL.esc(d.sub)} · 진단과 드릴 보기 ›</p></div></a>`
+        : `<div class="card" style="margin-top:16px"><b>아직 분석하지 않은 영상이에요</b><p class="small muted" style="margin-top:4px">AI가 관절을 인식해 구간·템포·궤적을 계산해요</p>
+           <button class="btn primary block" id="run" style="margin-top:12px">${SL.icon('ai')}정밀 분석 실행</button></div>`}
+      <div class="grid2" style="margin-top:12px">
+        <a class="btn" href="#/compare?a=${rec.id}">${SL.icon('compare')}비교하기</a>
+        <a class="btn primary" href="#/report?id=${rec.id}" ${d ? '' : 'style="pointer-events:none;opacity:.4"'}>${SL.icon('drill')}AI 진단 & 드릴</a>
+      </div></div>`);
+    view.appendChild(info);
+    const run = SL.$('#run', info);
+    if (run) run.onclick = async () => { player.destroy(); await SL.runAnalysis(rec); SL.render(); };
+    SL.$('#del', view).onclick = async () => {
+      if (!confirm('이 스윙 기록을 삭제할까요?')) return;
+      await SL.db.del(rec.id); SL.toast('삭제했어요'); SL.go('records');
+    };
+    return () => { player.destroy(); URL.revokeObjectURL(url); };
+  });
+})(window.SL);
+
+</script>
+<script>
+// AI 분석 & 드릴 (진단 결과 → 원인 → 구간별 진단 → 추천 드릴 → 유튜브)
+(function (SL) {
+  const spark = `<svg class="spark" viewBox="0 0 120 80" fill="none"><path d="M5 70C30 60 50 30 115 8" stroke="#C6F432" stroke-width="2" stroke-dasharray="3 5"/><circle cx="115" cy="8" r="3" fill="#C6F432"/></svg>`;
+
+  SL.route('report', async (view, params) => {
+    let rec = params.id ? await SL.db.get(params.id) : null;
+    if (!rec) rec = (await SL.db.all()).find(r => r.diagnosis);
+    if (!rec || !rec.diagnosis) {
+      view.innerHTML = `${SL.pageHead('AI 분석 & 드릴')}<div class="card empty">${SL.icon('ai')}분석된 스윙이 없어요<br>
+        <a class="btn primary sm" style="margin-top:14px" href="#/analyze">스윙 영상 올리기</a></div>
+        <h2 class="sec">미스샷으로 드릴 찾기</h2><div id="missOnly"></div>`;
+      missPicker(SL.$('#missOnly', view), null, SL.settings.hand);
+      return;
+    }
+    const d = rec.diagnosis;
+    const userMiss = new Set(rec.userMiss || []);
+    view.innerHTML = `${SL.pageHead('AI 분석 & 드릴')}
+      <h2 class="sec" style="margin-top:6px"><span class="row">${SL.icon('ai').replace('<svg', '<svg width="18" height="18" style="color:#C6F432"')} AI 분석 결과</span>
+        <span class="badge ${d.score >= 85 ? 'acc' : d.score >= 70 ? 'yel' : 'red'}">스윙 점수 ${d.score ?? '-'}</span></h2>
+      <div class="ai-result"><span class="ai-badge">AI</span><div><b>${SL.esc(d.headline)}</b><p>${SL.esc(rec.club || '')} · ${rec.view === 'front' ? '정면' : '측면'} · ${SL.fmtDate(rec.createdAt)}</p></div>${spark}</div>
+
+      <h2 class="sec">원인 분석</h2>
+      <div class="card" style="padding:4px 16px">${d.issues.length ? d.issues.map(i => `
+        <div class="cause"><span class="ci ${i.severity >= 2 ? 'bad' : 'warn'}">${SL.icon(i.severity >= 2 ? 'warn' : 'target')}</span>
+          <div style="flex:1"><b>${SL.esc(i.title)}</b><p>${SL.esc(i.detail)}</p>
+          <button class="badge" data-jump="${i.phase}" style="margin-top:6px">${SL.phaseName(i.phase)} 장면 보기 ›</button></div></div>`).join('')
+        : `<div class="cause"><span class="ci">${SL.icon('check')}</span><div><b>뚜렷한 문제가 보이지 않아요</b><p>측정한 항목이 모두 기준 범위 안이에요.</p></div></div>`}</div>
+
+      <h2 class="sec">구간별 진단</h2>
+      <div class="card phase-list" style="padding:4px 16px">${SL.PHASES.map(p => {
+        const n = d.notes[p.key] || { status: 'na', text: '-' };
+        return `<div class="ph"><span class="dot ${n.status === 'good' ? '' : n.status}"></span><span class="n">${p.name}</span><span class="d">${SL.esc(n.text)}</span></div>`;
+      }).join('')}</div>
+
+      <h2 class="sec">평소 미스샷 <span class="tiny muted">선택하면 드릴에 반영돼요</span></h2>
+      <div class="chips" id="miss">${Object.entries(SL.analyzer.MISS).map(([k, v]) => `<button class="chip outline ${userMiss.has(k) ? 'on' : ''}" data-m="${k}">${v}</button>`).join('')}</div>
+
+      <h2 class="sec">추천 드릴</h2>
+      <div id="drills"></div>
+      <a class="btn light block" id="more" target="_blank" rel="noopener" style="margin-top:14px">${SL.icon('youtube')}관련 영상 더보기</a>
+      <p class="tiny dim" style="margin-top:10px;text-align:center">관절 인식 기반 자동 진단으로, 촬영 각도·화질에 따라 결과가 달라질 수 있어요.</p>`;
+
+    const renderDrills = () => {
+      const list = SL.drills.recommend(d, [...userMiss]);
+      SL.$('#drills', view).innerHTML = list.slice(0, 6).map(SL.drills.card).join('');
+      const kw = [...new Set([...(d.issues.slice(0, 2).map(i => (SL.drills.BY_ISSUE[i.id] || [])[0]?.q).filter(Boolean)), ...[...userMiss].map(m => `골프 ${SL.analyzer.MISS[m]} 교정`)])];
+      SL.$('#more', view).href = SL.drills.yt(kw[0] || '골프 스윙 드릴');
+    };
+    renderDrills();
+    SL.$('#miss', view).addEventListener('click', async e => {
+      const b = e.target.closest('[data-m]'); if (!b) return;
+      const m = b.dataset.m; userMiss.has(m) ? userMiss.delete(m) : userMiss.add(m);
+      b.classList.toggle('on', userMiss.has(m));
+      rec.userMiss = [...userMiss]; await SL.db.put(rec); renderDrills();
+    });
+    view.addEventListener('click', e => {
+      const b = e.target.closest('[data-jump]'); if (!b) return;
+      SL.go('analyze', { id: rec.id, p: b.dataset.jump });
+    });
+  });
+
+  function missPicker(root, _d, hand) {
+    const sel = new Set();
+    root.innerHTML = `<div class="chips">${Object.entries(SL.analyzer.MISS).map(([k, v]) => `<button class="chip outline" data-m="${k}">${v}</button>`).join('')}</div><div class="list" style="margin-top:8px"></div>`;
+    root.addEventListener('click', e => {
+      const b = e.target.closest('[data-m]'); if (!b) return;
+      sel.has(b.dataset.m) ? sel.delete(b.dataset.m) : sel.add(b.dataset.m); b.classList.toggle('on');
+      SL.$('.list', root).innerHTML = sel.size ? SL.drills.recommend(null, [...sel]).map(SL.drills.card).join('') : '';
+    });
+  }
+
+  // 드릴 라이브러리 (검색)
+  SL.route('drills', (view) => {
+    const all = SL.drills.all();
+    view.innerHTML = `${SL.pageHead('드릴')}
+      <div class="card row" style="padding:0 14px;height:48px">${SL.icon('search').replace('<svg', '<svg width="18" height="18" style="color:#9AA3AE"')}
+        <input id="q" placeholder="슬라이스, 템포, 체중이동…" style="flex:1;background:none;border:0;outline:0;height:100%;font-size:15px"></div>
+      <div id="list" style="margin-top:6px"></div>`;
+    const draw = (q = '') => {
+      const s = q.trim();
+      const res = all.filter(d => !s || (d.title + d.desc + d.q + (SL.analyzer.MISS[d.cat] || '')).includes(s));
+      SL.$('#list', view).innerHTML = res.length ? res.map(SL.drills.card).join('') : `<div class="empty">검색 결과가 없어요<br><a class="btn sm" style="margin-top:10px" target="_blank" href="${SL.drills.yt('골프 ' + s + ' 드릴')}">유튜브에서 "${SL.esc(s)}" 찾기</a></div>`;
+    };
+    SL.$('#q', view).addEventListener('input', e => draw(e.target.value)); draw();
+  });
+})(window.SL);
+
+</script>
+<script>
+// 스윙 비교: 나란히 / 겹쳐보기, 각각 재생·정지·배속, 구간 맞추기, 한 화면에 그리기
+(function (SL) {
+  SL.route('compare', async (view, params) => {
+    const slots = { a: null, b: null }; // {rec, url}
+    view.innerHTML = `${SL.pageHead('스윙 비교')}
+      <div class="seg" id="mode" style="margin-bottom:12px"><button data-m="side" class="on">나란히 보기</button><button data-m="overlay">겹쳐 보기</button></div>
+      <div class="cmp-area"><div class="cmp-grid">
+        <div class="cmp-slot" data-k="a"></div><div class="cmp-slot" data-k="b"></div>
+      </div><canvas class="draw"></canvas></div>
+      <div id="opRow" class="row" style="margin-top:10px;display:none"><span class="small muted" style="width:70px">B 투명도</span><input type="range" id="op" min="10" max="90" value="50" style="flex:1"></div>
+      <div class="cmp-ctrls"><div class="cmp-ctrl" data-k="a"></div><div class="cmp-ctrl" data-k="b"></div></div>
+      <div class="row" style="margin-top:10px">
+        <button class="btn sm" id="both" style="flex:1">${SL.icon('play')}동시 재생</button>
+        <button class="btn sm" id="sync" style="flex:1">처음으로</button>
+      </div>
+      <div class="small muted" style="margin:14px 0 6px">구간 맞추기 (두 영상 모두 분석된 경우)</div>
+      <div class="chips" id="align">${SL.JUMP_PHASES.map(k => `<button class="chip" data-p="${k}">${SL.phaseName(k)}</button>`).join('')}</div>
+      <div id="tools"></div>`;
+    const area = SL.$('.cmp-area', view), grid = SL.$('.cmp-grid', view);
+    const layer = new SL.DrawLayer(SL.$('canvas.draw', area));
+    SL.drawToolbar(layer, SL.$('#tools', view));
+    const urls = [];
+
+    const label = (k, rec) => `${k.toUpperCase()} · ${rec.source === 'pro' ? '프로' : '나'}${rec.club ? ' ' + rec.club : ''}`;
+    const renderSlot = (k) => {
+      const box = SL.$(`.cmp-slot[data-k=${k}]`, view), ctrl = SL.$(`.cmp-ctrl[data-k=${k}]`, view), s = slots[k];
+      if (!s) {
+        box.innerHTML = `<div class="pick"><span class="small muted">${k === 'a' ? '내 스윙' : '비교할 스윙 (프로 영상 등)'}</span>
+          <button class="btn sm primary" data-pick="${k}">${SL.icon('plus')}영상 선택</button></div>`;
+        ctrl.innerHTML = `<div class="small dim" style="text-align:center;padding:14px 0">${k.toUpperCase()} 영상 없음</div>`;
+        return;
+      }
+      box.innerHTML = `<span class="lab">${SL.esc(label(k, s.rec))}</span><video class="${k}" loop muted playsinline webkit-playsinline preload="auto"></video>`;
+      const v = SL.$('video', box); s.v = v;
+      SL.loadVideo(v, s.url).then(() => { v.playbackRate = s.speed || 0.5; }).catch(e => SL.toast(e.message));
+      ctrl.innerHTML = `<div class="r"><button class="tbtn" data-act="play">${SL.icon('play')}</button>
+          <button class="tbtn" data-act="prev">${SL.icon('prev')}</button><button class="tbtn" data-act="next">${SL.icon('next')}</button>
+          <button class="tbtn" data-pick="${k}" style="margin-left:auto">${SL.icon('flip')}</button></div>
+        <input type="range" min="0" max="1000" value="0">
+        <div class="mini-speeds">${[0.25, 0.5, 0.75, 1].map(x => `<button data-sp="${x}" class="${x === (s.speed || 0.5) ? 'on' : ''}">${x}x</button>`).join('')}</div>`;
+      const rg = SL.$('input', ctrl);
+      rg.addEventListener('input', () => { v.pause(); v.currentTime = rg.value / 1000 * (v.duration || 0); });
+      v.addEventListener('timeupdate', () => { if (v.duration) rg.value = v.currentTime / v.duration * 1000; });
+      v.addEventListener('play', () => SL.$('[data-act=play]', ctrl).innerHTML = SL.icon('pause'));
+      v.addEventListener('pause', () => SL.$('[data-act=play]', ctrl).innerHTML = SL.icon('play'));
+      ctrl.onclick = (e) => {
+        const b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.act === 'play') v.paused ? v.play().catch(() => {}) : v.pause();
+        if (b.dataset.act === 'prev' || b.dataset.act === 'next') { v.pause(); v.currentTime = SL.clamp(v.currentTime + (b.dataset.act === 'next' ? 1 : -1) / 30, 0, v.duration || 0); }
+        if (b.dataset.sp) { s.speed = +b.dataset.sp; v.playbackRate = s.speed; SL.$$('[data-sp]', ctrl).forEach(x => x.classList.toggle('on', x === b)); }
+      };
+    };
+
+    const setSlot = async (k, rec) => {
+      const old = slots[k]; if (old) { old.v && old.v.pause(); }
+      const url = URL.createObjectURL(rec.blob); urls.push(url);
+      slots[k] = { rec, url, speed: 0.5 }; renderSlot(k);
+    };
+
+    const pick = async (k) => {
+      const list = (await SL.db.all()).filter(r => r.blob);
+      SL.sheet(`<h3>${k.toUpperCase()} 영상 선택</h3>
+        <label class="btn primary block" for="pf">${SL.icon('upload')}새 영상 업로드 (프로 스윙 등)</label>
+        <input type="file" id="pf" accept="video/*" hidden>
+        <div class="small muted" style="margin:16px 0 4px">저장된 스윙</div>
+        ${list.length ? list.map(r => `<div class="rec" data-id="${r.id}" style="cursor:pointer">
+          <div class="th ${r.thumb ? '' : 'ph'}" style="${r.thumb ? `background-image:url(${r.thumb})` : ''}">${r.thumb ? '' : SL.icon('club')}</div>
+          <div class="meta"><b>${r.source === 'pro' ? '프로 · ' : ''}${SL.esc(r.club || r.title || '스윙')}</b><span>${SL.fmtDate(r.createdAt)}</span></div></div>`).join('') : '<div class="empty">저장된 영상이 없어요</div>'}`,
+        (sh, close) => {
+          sh.addEventListener('click', async e => {
+            const r = e.target.closest('[data-id]'); if (!r) return;
+            close(); setSlot(k, await SL.db.get(r.dataset.id));
+          });
+          SL.$('#pf', sh).addEventListener('change', async e => {
+            const f = e.target.files[0]; if (!f) return; close();
+            const rec = { id: SL.uid(), createdAt: Date.now(), source: k === 'b' ? 'pro' : 'upload', title: f.name, blob: f, club: '', view: 'side', hand: SL.settings.hand, slow: 1 };
+            await SL.db.put(rec); setSlot(k, rec);
+            SL.toast(k === 'b' ? '프로 영상으로 저장했어요 (기록 > 프로)' : '영상을 저장했어요');
+          });
+        });
+    };
+
+    view.addEventListener('click', e => { const b = e.target.closest('[data-pick]'); if (b) pick(b.dataset.pick); });
+    SL.$('#mode', view).addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      SL.$$('#mode button', view).forEach(x => x.classList.toggle('on', x === b));
+      const ov = b.dataset.m === 'overlay';
+      grid.classList.toggle('overlay', ov); SL.$('#opRow', view).style.display = ov ? '' : 'none';
+      const sb = SL.$('.cmp-slot[data-k=b]', view);
+      sb.style.cssText = ov ? 'position:absolute;inset:0;background:transparent;height:auto' : '';
+      if (ov) SL.toast('B 영상이 A 위에 겹쳐져요. 시작 프레임을 맞춘 뒤 재생하세요');
+    });
+    SL.$('#op', view).addEventListener('input', e => grid.style.setProperty('--op', e.target.value / 100));
+    SL.$('#both', view).onclick = () => {
+      const vs = ['a', 'b'].map(k => slots[k] && slots[k].v).filter(Boolean);
+      const anyPlaying = vs.some(v => !v.paused);
+      vs.forEach(v => anyPlaying ? v.pause() : v.play().catch(() => {}));
+      SL.$('#both', view).innerHTML = (anyPlaying ? SL.icon('play') + '동시 재생' : SL.icon('pause') + '동시 정지');
+    };
+    SL.$('#sync', view).onclick = () => ['a', 'b'].forEach(k => { const s = slots[k]; if (s && s.v) { s.v.pause(); s.v.currentTime = 0; } });
+    SL.$('#align', view).addEventListener('click', e => {
+      const b = e.target.closest('[data-p]'); if (!b) return;
+      let n = 0;
+      ['a', 'b'].forEach(k => { const s = slots[k]; if (s && s.v && s.rec.phases) { s.v.pause(); s.v.currentTime = s.rec.phases.t[b.dataset.p] + 0.001; n++; } });
+      if (n < 2) SL.toast('분석된 영상만 구간을 맞출 수 있어요 (영상 열기 → 정밀 분석)');
+      SL.$$('#align .chip', view).forEach(x => x.classList.toggle('on', x === b));
+    });
+
+    renderSlot('a'); renderSlot('b');
+    if (params.a) { const r = await SL.db.get(params.a); if (r) setSlot('a', r); }
+    if (params.b) { const r = await SL.db.get(params.b); if (r) setSlot('b', r); }
+    if (params.overlay) SL.$('#mode [data-m=overlay]', view).click();
+    return () => { layer.destroy(); ['a', 'b'].forEach(k => slots[k] && slots[k].v && slots[k].v.pause()); urls.forEach(u => URL.revokeObjectURL(u)); };
+  });
+})(window.SL);
+
+</script>
+<script>
+// 연습 모드: 카메라를 켜두면 스윙마다 자동으로 잘라 저장 → 스윙 일관성 분석
+(function (SL) {
+  const pickMime = () => {
+    const c = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+    return c.find(m => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+  };
+
+  // 스윙 감지 상태머신 (시간 기반). 입력: 정규화 랜드마크, 현재시각(초)
+  class SwingDetector {
+    constructor(cb) { this.cb = cb; this.reset(); }
+    reset() { this.state = 'wait'; this.since = null; this.prev = null; this.stillT = null; }
+    update(lm, now) {
+      if (!lm) return;
+      const hy = (lm[15][1] + lm[16][1]) / 2, hx = (lm[15][0] + lm[16][0]) / 2;
+      const shY = (lm[11][1] + lm[12][1]) / 2, hipY = (lm[23][1] + lm[24][1]) / 2;
+      const T = Math.max(0.05, hipY - shY);
+      let speed = 0;
+      if (this.prev) { const dt = Math.max(0.016, now - this.prev.t); speed = Math.hypot(hx - this.prev.x, hy - this.prev.y) / T / dt; }
+      this.prev = { x: hx, y: hy, t: now };
+      const low = hy > hipY - 0.35 * T, still = speed < 0.7;
+      switch (this.state) {
+        case 'wait':
+          if (low && still) { if (this.since == null) this.since = now; if (now - this.since > 0.5) { this.state = 'address'; this.addrT = now; this.stillT = now; this.cb('address'); } }
+          else this.since = null;
+          break;
+        case 'address':
+          if (still && low) { this.stillT = now; this.addrY = hy; }
+          if (hy < shY) { this.state = 'back'; this.topY = hy; this.topT = now; this.lowY = null; this.cb('back'); }
+          else if (!low && now - this.stillT > 3) { this.reset(); this.cb('wait'); }
+          break;
+        case 'back':
+          if (this.lowY == null && hy < this.topY) { this.topY = hy; this.topT = now; this.cb('top'); }
+          // 손이 골반 높이까지 내려오면 가장 낮은 지점(=임팩트)을 추적
+          if (hy > hipY - 0.15 * T && now - this.topT > 0.08) {
+            if (this.lowY == null || hy > this.lowY) { this.lowY = hy; this.lowT = now; }
+            const addr = this.addrY ?? hipY;
+            if (hy >= addr - 0.05 * T || hy < this.lowY - 0.05 * T) { this.state = 'follow'; this.impT = this.lowT; this.cb('impact'); }
+          }
+          if (this.state === 'back' && now - this.topT > 3) { this.reset(); this.cb('wait'); }
+          break;
+        case 'follow':
+          if (now - this.impT > 1.1) {
+            const back = this.topT - this.stillT, down = this.impT - this.topT;
+            this.cb('finish', { back, down, ratio: down > 0 ? back / down : null, topHeight: (shY - this.topY) / T, addrT: this.addrT, topT: this.topT, impT: this.impT });
+            this.state = 'cool'; this.coolT = now;
+          }
+          break;
+        case 'cool':
+          if (now - this.coolT > 0.8) { this.reset(); this.cb('wait'); }
+          break;
+      }
+    }
+  }
+  SL.SwingDetector = SwingDetector;
+
+  SL.route('practice', async (view) => {
+    document.body.classList.add('fullscreen');
+    const sessionId = SL.uid(); let count = 0;
+    view.innerHTML = `<div class="pm">
+      <div class="pm-stage"><video autoplay muted playsinline webkit-playsinline></video><canvas></canvas><div class="pm-guide"></div>
+        <div class="pm-top">
+          <div class="row"><button class="pill" id="close">${SL.icon('x').replace('<svg', '<svg width="14" height="14"')}</button>
+            <span class="pill" id="recpill"><i class="rd"></i>REC <span id="rt">00:00</span></span></div>
+          <span class="pill">연습 모드</span></div>
+        <div class="pm-status"><span class="pill busy" id="st">카메라 준비 중…</span></div>
+      </div>
+      <div class="pm-bottom">
+        <div class="pm-count"><span>오늘 저장된 스윙 <b id="cnt">0</b>개</span><button class="badge acc" id="cons">일관성 분석 ›</button></div>
+        <div class="pm-thumbs" id="thumbs"><div style="width:auto;border:0;background:none;color:#6B7480;font-size:12px;display:flex;align-items:center">스윙하면 여기에 자동 저장돼요</div></div>
+        <div class="pm-ctrl">
+          <a class="pm-side" href="#/records">${SL.icon('gallery')}</a>
+          <button class="recbtn" id="recbtn"><i></i></button>
+          <button class="pm-side" id="flip">${SL.icon('flip')}</button>
+        </div>
+      </div></div>`;
+    const video = SL.$('video', view), cv = SL.$('canvas', view), ctx = cv.getContext('2d');
+    const st = SL.$('#st', view);
+    const setStatus = (txt, cls = '') => { st.className = 'pill ' + cls; st.innerHTML = txt; };
+    let stream = null, facing = 'environment', lm = null, raf = 0, active = false, sessStart = 0, wake = null, alive = true;
+    let recorder = null, recStart = 0, topThumb = null;
+    const mime = pickMime();
+    const thumbCv = document.createElement('canvas');
+
+    const startCam = async () => {
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 30 } }, audio: false });
+      } catch (e) {
+        setStatus('카메라를 쓸 수 없어요', 'swing');
+        SL.sheet(`<h3>카메라 권한이 필요해요</h3><p class="small muted">브라우저 설정에서 카메라를 허용해 주세요. HTTPS 주소(또는 localhost)에서만 카메라가 켜져요.<br><br>오류: ${SL.esc(e.message)}</p>`);
+        return false;
+      }
+      video.srcObject = stream;
+      const mir = facing === 'user' ? 'scaleX(-1)' : '';
+      video.style.transform = cv.style.transform = mir;
+      await video.play().catch(() => {});
+      return true;
+    };
+
+    const startRec = () => {
+      if (!window.MediaRecorder || !stream) return;
+      const chunks = [];
+      try { recorder = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4e6 } : undefined); } catch (e) { recorder = new MediaRecorder(stream); }
+      recorder._chunks = chunks;
+      recorder.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      recorder.start(200); recStart = performance.now() / 1000;
+    };
+    const stopRec = (onBlob) => {
+      const r = recorder; recorder = null;
+      if (!r || r.state === 'inactive') return;
+      r.onstop = () => onBlob && onBlob(new Blob(r._chunks, { type: r.mimeType || mime || 'video/webm' }));
+      try { r.stop(); } catch (e) {}
+    };
+
+    const saveSwing = (m) => {
+      const thumb = topThumb, start = recStart;
+      stopRec(async (blob) => {
+        const rec = {
+          id: SL.uid(), createdAt: Date.now(), source: 'practice', sessionId, blob, thumb, club: SL.settings.practiceClub || '',
+          view: 'side', hand: SL.settings.hand, slow: 1,
+          tempo: m.ratio ? { back: +m.back.toFixed(2), down: +m.down.toFixed(2), ratio: +m.ratio.toFixed(1) } : null,
+          topHeight: +m.topHeight.toFixed(2), live: { top: +(m.topT - start).toFixed(2), impact: +(m.impT - start).toFixed(2) },
+        };
+        await SL.db.put(rec);
+        count++; SL.$('#cnt', view).textContent = count;
+        const th = SL.$('#thumbs', view);
+        if (count === 1) th.innerHTML = '';
+        const d = SL.h(`<div style="${thumb ? `background-image:url(${thumb})` : ''}" data-id="${rec.id}"><span>${rec.tempo ? rec.tempo.ratio + ':1' : '#' + count}</span></div>`);
+        th.prepend(d);
+      });
+      startRec();
+    };
+
+    const det = new SwingDetector((ev, m) => {
+      if (!active) return;
+      if (ev === 'address') { setStatus(SL.icon('check').replace('<svg', '<svg width="14" height="14"') + '어드레스 감지 — 스윙하세요', ''); if (recorder) { stopRec(null); } startRec(); }
+      if (ev === 'back') setStatus('스윙 중…', 'swing');
+      if (ev === 'top') { try { thumbCv.width = 120; thumbCv.height = Math.round(120 * video.videoHeight / video.videoWidth); thumbCv.getContext('2d').drawImage(video, 0, 0, thumbCv.width, thumbCv.height); topThumb = thumbCv.toDataURL('image/jpeg', 0.7); } catch (e) {} }
+      if (ev === 'finish') { saveSwing(m); setStatus(`저장됨 · 템포 ${m.ratio ? m.ratio.toFixed(1) : '-'}:1`, ''); }
+      if (ev === 'wait') setStatus(SL.icon('check').replace('<svg', '<svg width="14" height="14"') + '스윙 감지 대기중', '');
+    });
+
+    const loop = () => {
+      if (!alive) return;
+      raf = requestAnimationFrame(loop);
+      const W = cv.clientWidth, H = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+      if (cv.width !== Math.round(W * dpr)) { cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); }
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      if (active) SL.$('#rt', view).textContent = new Date((performance.now() / 1000 - sessStart) * 1000).toISOString().substr(14, 5);
+      if (!lm || video.readyState < 2) return;
+      let p = null;
+      try { p = SL.pose.detect(lm, video); } catch (e) { return; }
+      det.update(p, performance.now() / 1000);
+      if (p) {
+        const vw = video.videoWidth, vh = video.videoHeight, s = Math.max(cv.width / vw, cv.height / vh);
+        const ox = (cv.width - vw * s) / 2, oy = (cv.height - vh * s) / 2;
+        const mapped = p.map(q => [(q[0] * vw * s + ox) / cv.width, (q[1] * vh * s + oy) / cv.height, q[2]]);
+        SL.SwingPlayer.skeleton(ctx, mapped, cv.width, cv.height, dpr);
+      }
+    };
+
+    const setActive = (on) => {
+      active = on; SL.$('#recbtn', view).classList.toggle('on', on); SL.$('#recpill', view).classList.toggle('rec', on);
+      if (on) { sessStart = performance.now() / 1000; det.reset(); setStatus(SL.icon('check').replace('<svg', '<svg width="14" height="14"') + '스윙 감지 대기중', '');
+        if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => wake = w).catch(() => {}); }
+      else { stopRec(null); setStatus('일시정지됨 — 빨간 버튼으로 시작', 'busy'); wake && wake.release && wake.release(); }
+    };
+
+    SL.$('#recbtn', view).onclick = () => { if (!lm) return SL.toast('AI 모델을 불러오는 중이에요'); setActive(!active); };
+    SL.$('#flip', view).onclick = async () => { facing = facing === 'user' ? 'environment' : 'user'; const was = active; if (was) setActive(false); await startCam(); };
+    SL.$('#close', view).onclick = () => SL.go('home');
+    SL.$('#cons', view).onclick = () => { if (!count) return SL.toast('스윙을 2개 이상 저장하면 분석할 수 있어요'); SL.go('session', { id: sessionId }); };
+    SL.$('#thumbs', view).addEventListener('click', e => { const d = e.target.closest('[data-id]'); if (d) SL.go('analyze', { id: d.dataset.id }); });
+
+    if (await startCam()) {
+      setStatus('AI 자세 인식 모델 불러오는 중…', 'busy');
+      try { lm = await SL.pose.get('lite'); if (alive) { setActive(true); loop(); } }
+      catch (e) { setStatus('AI 모델을 불러오지 못했어요', 'swing'); }
+    }
+
+    return () => {
+      alive = false; cancelAnimationFrame(raf); stopRec(null);
+      if (stream) stream.getTracks().forEach(t => t.stop());
+      wake && wake.release && wake.release();
+      document.body.classList.remove('fullscreen');
+    };
+  });
+})(window.SL);
+
+</script>
+<script>
+// 기록 목록 + 연습 세션 일관성 분석
+(function (SL) {
+  SL.route('records', async (view) => {
+    const all = await SL.db.all();
+    let filter = 'all', selecting = false; const sel = [];
+    view.innerHTML = `<header class="pagehead left" style="margin:0 0 8px"><h1 style="font-size:22px">기록</h1>
+        <button class="btn sm" id="selBtn">${SL.icon('compare')}비교 선택</button></header>
+      <div class="chips" id="flt">${[['all', '전체'], ['upload', '업로드'], ['practice', '연습모드'], ['pro', '프로']].map(([k, v], i) => `<button class="chip ${i ? '' : 'on'}" data-f="${k}">${v}</button>`).join('')}</div>
+      <div id="list" style="margin-top:6px"></div>
+      <div id="selBar" style="display:none;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tab-h) + var(--safe-b) + 12px);width:calc(100% - 36px);max-width:724px;z-index:40" class="row">
+        <button class="btn primary" style="flex:1" id="goSide">나란히 비교</button><button class="btn light" style="flex:1" id="goOv">겹쳐 보기</button></div>`;
+    const draw = () => {
+      const list = all.filter(r => filter === 'all' || r.source === filter);
+      if (!list.length) { SL.$('#list', view).innerHTML = `<div class="empty">${SL.icon('chart')}기록이 없어요<br><a class="btn primary sm" style="margin-top:12px" href="#/analyze">스윙 업로드</a></div>`; return; }
+      // 날짜별 그룹
+      let html = '', last = '';
+      list.forEach(r => {
+        const day = SL.fmtDate(r.createdAt).slice(0, 10);
+        if (day !== last) { html += `<div class="small muted" style="margin:18px 0 2px;font-weight:600">${day}</div>`; last = day; }
+        if (selecting) html += `<div class="row" data-sel="${r.id}" style="cursor:pointer"><span class="chk ${sel.includes(r.id) ? 'on' : ''}">${sel.includes(r.id) ? SL.icon('check') : ''}</span><div style="flex:1;pointer-events:none">${SL.recCard(r)}</div></div>`;
+        else html += SL.recCard(r);
+      });
+      SL.$('#list', view).innerHTML = html;
+      SL.$('#selBar', view).style.display = selecting && sel.length === 2 ? 'flex' : 'none';
+    };
+    SL.$('#flt', view).addEventListener('click', e => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; SL.$$('#flt .chip', view).forEach(x => x.classList.toggle('on', x === b)); draw(); });
+    SL.$('#selBtn', view).onclick = () => { selecting = !selecting; sel.length = 0; SL.$('#selBtn', view).innerHTML = selecting ? '취소' : SL.icon('compare') + '비교 선택'; if (selecting) SL.toast('비교할 영상 2개를 고르세요'); draw(); };
+    SL.$('#list', view).addEventListener('click', e => {
+      const r = e.target.closest('[data-sel]'); if (!r) return; e.preventDefault();
+      const id = r.dataset.sel, i = sel.indexOf(id);
+      if (i >= 0) sel.splice(i, 1); else { if (sel.length === 2) sel.shift(); sel.push(id); }
+      draw();
+    });
+    SL.$('#goSide', view).onclick = () => SL.go('compare', { a: sel[0], b: sel[1] });
+    SL.$('#goOv', view).onclick = () => SL.go('compare', { a: sel[0], b: sel[1], overlay: 1 });
+    draw();
+  });
+
+  // 연습 세션 일관성
+  SL.route('session', async (view, params) => {
+    const swings = (await SL.db.all()).filter(r => r.sessionId === params.id).reverse();
+    const c = SL.analyzer.consistency(swings);
+    view.innerHTML = `${SL.pageHead('스윙 일관성 분석')}`;
+    if (!c) { view.innerHTML += `<div class="empty">템포가 측정된 스윙이 2개 이상 필요해요<br><a class="btn primary sm" style="margin-top:12px" href="#/practice">연습모드 계속하기</a></div>`; return; }
+    const col = c.score >= 80 ? '#C6F432' : c.score >= 60 ? '#FFD60A' : '#FF453A';
+    const R = 48, L = 2 * Math.PI * R;
+    const maxR = Math.max(...swings.filter(s => s.tempo).map(s => s.tempo.ratio), 4);
+    view.innerHTML += `
+      <div class="card row" style="gap:18px">
+        <div class="score-ring"><svg viewBox="0 0 110 110" width="110" height="110"><circle cx="55" cy="55" r="${R}" stroke="#22272E" stroke-width="10" fill="none"/>
+          <circle cx="55" cy="55" r="${R}" stroke="${col}" stroke-width="10" fill="none" stroke-linecap="round" stroke-dasharray="${L * c.score / 100} ${L}" transform="rotate(-90 55 55)"/></svg><b>${c.score}</b></div>
+        <div><div style="font-weight:700;font-size:16px">${c.score >= 80 ? '리듬이 아주 일정해요' : c.score >= 60 ? '대체로 일정하지만 편차가 있어요' : '스윙마다 리듬이 달라요'}</div>
+          <div class="small muted" style="margin-top:4px">${c.n}개 스윙 · 평균 템포 ${c.ratio.mean.toFixed(1)}:1 (±${c.ratio.sd.toFixed(2)})</div></div>
+      </div>
+      <h2 class="sec">스윙별 템포</h2>
+      <div class="card"><div class="bars">${swings.filter(s => s.tempo).map((s, i) => `<div style="height:${s.tempo.ratio / maxR * 100}%;${Math.abs(s.tempo.ratio - c.ratio.mean) > c.ratio.sd * 1.5 ? 'background:#FF9F0A' : ''}"><span>${s.tempo.ratio}</span><em>${i + 1}</em></div>`).join('')}</div><div style="height:16px"></div></div>
+      <h2 class="sec">상세</h2>
+      <div class="card"><table class="t"><tr><th></th><th>평균</th><th>편차(±)</th></tr>
+        <tr><td>템포 비율</td><td>${c.ratio.mean.toFixed(2)} : 1</td><td>${c.ratio.sd.toFixed(2)}</td></tr>
+        <tr><td>백스윙 시간</td><td>${c.back.mean.toFixed(2)}s</td><td>${c.back.sd.toFixed(2)}s</td></tr>
+        <tr><td>다운스윙 시간</td><td>${c.down.mean.toFixed(2)}s</td><td>${c.down.sd.toFixed(2)}s</td></tr>
+        ${c.top ? `<tr><td>탑 손 높이</td><td>${c.top.mean.toFixed(2)}</td><td>${c.top.sd.toFixed(2)}</td></tr>` : ''}
+      </table><p class="tiny dim" style="margin-top:8px">탑 손 높이 = 어깨선 위로 올라간 손 높이 (몸통 길이 기준)</p></div>
+      <h2 class="sec">스윙 겹쳐 보기 <span class="tiny muted">템포가 가장 다른 두 스윙</span></h2>
+      <div id="pair"></div>
+      <h2 class="sec">저장된 스윙</h2>${swings.map(SL.recCard).join('')}`;
+    const t = swings.filter(s => s.tempo);
+    const lo = t.reduce((a, b) => (a.tempo.ratio < b.tempo.ratio ? a : b)), hi = t.reduce((a, b) => (a.tempo.ratio > b.tempo.ratio ? a : b));
+    SL.$('#pair', view).innerHTML = `<a class="btn light block" href="#/compare?a=${lo.id}&b=${hi.id}&overlay=1">${SL.icon('stack')}${lo.tempo.ratio}:1 vs ${hi.tempo.ratio}:1 겹쳐 보기</a>`;
+  });
+})(window.SL);
+
+</script>
+<script>
+// 추후 기능 페이지(샷데이터·대회·스토어) + 더보기(설정)
+(function (SL) {
+  SL.route('shotdata', (view) => {
+    const items = [['클럽 헤드스피드', '임팩트 직전 클럽헤드 이동 속도 추정 (고속 촬영 필요)'], ['스윙 템포', '백스윙:다운스윙 비율 — 현재 구현됨'], ['스윙 궤도', '인-아웃 / 아웃-인 경로 각도'], ['어택 앵글', '임팩트 직전 헤드의 상하 진입각'], ['구질 추정', '궤도 + 페이스 방향으로 페이드/드로우 예측'], ['볼 출발 방향', '임팩트 직후 공 이동 방향 (정면 촬영)']];
+    view.innerHTML = `${SL.pageHead('샷 데이터')}
+      <div class="soon-hero"><span class="tag">준비중</span><h2>휴대폰 카메라로 샷 데이터 측정</h2>
+        <p>트랙맨·GC 같은 장비 없이, 슬로모션 영상에서 측정 가능한 항목부터 단계적으로 추가할 예정이에요.</p></div>
+      <h2 class="sec">측정 예정 항목</h2>
+      <div class="card" style="padding:4px 16px">${items.map(([a, b], i) => `<div class="cause"><span class="ci ${i === 1 ? '' : 'warn'}">${SL.icon(i === 1 ? 'check' : 'shot')}</span><div><b>${a}</b><p>${b}</p></div></div>`).join('')}</div>`;
+  });
+
+  SL.route('tour', (view) => {
+    const tours = ['PGA', 'LPGA', 'KPGA', 'KLPGA'];
+    view.innerHTML = `<header class="pagehead left" style="margin:0 0 8px"><h1 style="font-size:22px">대회</h1></header>
+      <div class="seg" id="tours">${tours.map((t, i) => `<button class="${i ? '' : 'on'}" data-t="${t}">${t}</button>`).join('')}</div>
+      <div class="soon-hero" style="margin-top:14px"><span class="tag">준비중</span><h2 id="tt">PGA 투어</h2><p>대회 일정 · 실시간 리더보드 · 선수 정보를 한곳에서 볼 수 있게 연동할 예정이에요.</p></div>
+      <h2 class="sec">이번 주 대회</h2>
+      <div class="card"><div class="skel" style="height:18px;width:60%"></div><div class="skel" style="height:12px;width:40%;margin-top:10px"></div></div>
+      <h2 class="sec">리더보드</h2>
+      <div class="card" style="padding:4px 16px">${[1, 2, 3, 4, 5].map(i => `<div class="lb-row"><b style="width:22px">${i}</b><div class="skel" style="height:14px;flex:1"></div><div class="skel" style="height:14px;width:40px"></div></div>`).join('')}</div>
+      <h2 class="sec">선수 정보</h2>
+      <div class="grid3">${[1, 2, 3].map(() => `<div class="card"><div class="skel" style="width:48px;height:48px;border-radius:50%;margin:0 auto"></div><div class="skel" style="height:12px;margin-top:10px"></div></div>`).join('')}</div>
+      <p class="tiny dim" style="margin-top:14px;text-align:center">데이터 연동 전 화면 구성입니다.</p>`;
+    SL.$('#tours', view).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; SL.$$('#tours button', view).forEach(x => x.classList.toggle('on', x === b)); SL.$('#tt', view).textContent = b.dataset.t + ' 투어'; });
+  });
+
+  SL.route('store', (view) => {
+    const cats = [['shirt', '골프웨어'], ['club', '클럽'], ['ball', '볼'], ['bag', '골프백']];
+    view.innerHTML = `<header class="pagehead left" style="margin:0 0 8px"><h1 style="font-size:22px">스토어</h1></header>
+      <div class="quick" style="margin-top:0">${cats.map(([i, t]) => `<a href="javascript:void 0" data-c="${t}"><span class="qi">${SL.icon(i)}</span>${t}</a>`).join('')}</div>
+      <div class="soon-hero" style="margin-top:18px"><span class="tag">준비중</span><h2>브랜드별 골프용품 모아보기</h2><p>내 스윙 진단 결과에 맞는 용품(예: 슬라이스 방지 드라이버)을 추천하는 기능으로 확장할 예정이에요.</p></div>
+      <h2 class="sec" id="ct">추천 상품</h2>
+      <div class="grid2">${[1, 2, 3, 4].map(() => `<div class="prod"><div class="pi skel" style="border-radius:0"></div><div class="pt"><div class="skel" style="height:12px;width:70%"></div><div class="skel" style="height:12px;width:40%;margin-top:8px"></div></div></div>`).join('')}</div>`;
+    view.addEventListener('click', e => { const a = e.target.closest('[data-c]'); if (a) { SL.$('#ct', view).textContent = a.dataset.c; SL.toast(`${a.dataset.c} 상품은 준비 중이에요`); } });
+  });
+
+  SL.route('more', async (view) => {
+    const s = SL.settings;
+    view.innerHTML = `<header class="pagehead left" style="margin:0 0 8px"><h1 style="font-size:22px">더보기</h1></header>
+      <div class="card">
+        <div class="list-row"><span>이름</span><input id="nm" value="${SL.esc(s.name)}" style="background:none;border:0;text-align:right;color:var(--sub);outline:0;width:50%"></div>
+        <div class="list-row"><span>스윙 방향</span><div class="seg" id="hand" style="width:170px"><button data-h="right" class="${s.hand === 'right' ? 'on' : ''}">오른손</button><button data-h="left" class="${s.hand === 'left' ? 'on' : ''}">왼손</button></div></div>
+        <div class="list-row"><span>분석 프레임</span><div class="seg" id="fps" style="width:170px"><button data-f="30" class="${s.analysisFps == 30 ? 'on' : ''}">30fps</button><button data-f="60" class="${s.analysisFps == 60 ? 'on' : ''}">60fps</button></div></div>
+      </div>
+      <p class="tiny dim" style="margin:8px 4px 0">60fps는 더 정밀하지만 분석 시간이 2배 걸려요.</p>
+      <div class="card" style="margin-top:14px">
+        <a class="list-row" href="#/shotdata"><span>샷 데이터 (준비중)</span><span class="r">${SL.icon('chev').replace('<svg', '<svg width="16" height="16"')}</span></a>
+        <a class="list-row" href="#/drills"><span>드릴 라이브러리</span><span class="r">${SL.icon('chev').replace('<svg', '<svg width="16" height="16"')}</span></a>
+        <div class="list-row"><span>저장 공간</span><span class="r" id="usage">-</span></div>
+        <button class="list-row" id="wipe" style="width:100%;color:var(--red)">모든 기록 삭제</button>
+      </div>
+      <p class="tiny dim" style="margin-top:16px;text-align:center">SwingLab v0.1 · 영상은 이 기기 브라우저에만 저장돼요</p>`;
+    SL.$('#nm', view).addEventListener('change', e => { s.name = e.target.value.trim() || '사용자'; SL.saveSettings(); SL.toast('저장했어요'); });
+    SL.$('#hand', view).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s.hand = b.dataset.h; SL.saveSettings(); SL.$$('#hand button', view).forEach(x => x.classList.toggle('on', x === b)); });
+    SL.$('#fps', view).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s.analysisFps = +b.dataset.f; SL.saveSettings(); SL.$$('#fps button', view).forEach(x => x.classList.toggle('on', x === b)); });
+    SL.$('#wipe', view).onclick = async () => { if (confirm('저장된 모든 스윙 영상과 분석을 삭제할까요? 되돌릴 수 없어요.')) { await SL.db.clear(); SL.toast('모두 삭제했어요'); } };
+    if (navigator.storage && navigator.storage.estimate) navigator.storage.estimate().then(e => SL.$('#usage', view).textContent = `${(e.usage / 1e6).toFixed(1)}MB 사용`).catch(() => {});
+  });
+})(window.SL);
+
+</script>
+<script>SL.start();</script>
+<!-- /build:scripts -->
+</body>
+</html>
