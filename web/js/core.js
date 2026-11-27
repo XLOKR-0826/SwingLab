@@ -74,11 +74,15 @@ window.SL = window.SL || {};
     ball: I('<circle cx="12" cy="12" r="8"/><circle cx="10" cy="9" r=".7" fill="currentColor"/><circle cx="14" cy="10" r=".7" fill="currentColor"/><circle cx="11" cy="13" r=".7" fill="currentColor"/><circle cx="15" cy="14" r=".7" fill="currentColor"/>'),
     bag: I('<path d="M8 7V5a4 4 0 0 1 8 0v2"/><rect x="6" y="7" width="12" height="14" rx="3"/><path d="M6 12h12"/>'),
     settings: I('<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-2.7-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.6 15 1.6 1.6 0 0 0 2 14H2a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.1-2.7l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.6 1.6 0 0 0 9 4.6V4a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 2.7 1.1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1.1 2.7H22a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1Z"/>'),
+    homefill: I('<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1Z" fill="currentColor" stroke="none"/>'),
+    trend: I('<path d="M3 20 9 13l4 4 8-10"/><path d="M15 7h6v6"/>'),
+    folder: I('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>'),
+    user: I('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
     stack: I('<rect x="4" y="4" width="12" height="12" rx="2"/><rect x="8" y="8" width="12" height="12" rx="2"/>'),
   };
   SL.icon = (n) => SL.icons[n] || '';
 
-  SL.logo = () => `<div class="logo"><span class="logo-mark"><svg viewBox="0 0 20 14"><path d="M2 11C6 9 9 4 18 3" stroke="#0B0D10" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="5" cy="11" r="1.6" fill="#0B0D10"/></svg></span>SWING LAB</div>`;
+  SL.logo = () => `<div class="logo"><img class="lm" src="img/logo-mark.png" alt=""><img class="lw" src="img/logo-word.png" alt="SWING LAB"></div>`;
 
   SL.pageHead = (title, { back = true, right = '' } = {}) => `
     <header class="pagehead">
@@ -100,7 +104,7 @@ window.SL = window.SL || {};
     const [name, q] = h.split('?');
     return { name: name || 'home', params: Object.fromEntries(new URLSearchParams(q || '')) };
   };
-  const TAB_OF = { home: 'home', records: 'records', tour: 'tour', store: 'store', more: 'more', shotdata: 'more' };
+  const TAB_OF = { home: 'home', analyze: 'analyze', report: 'analyze', compare: 'analyze', practice: 'practice', session: 'records', records: 'records', more: 'more', shotdata: 'more' };
 
   SL.render = async () => {
     if (typeof SL._cleanup === 'function') { try { SL._cleanup(); } catch (e) { console.warn(e); } }

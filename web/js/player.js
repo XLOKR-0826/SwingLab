@@ -109,29 +109,69 @@
         if (i < ph.idx.address) cur = null;
         hud.style.display = cur ? '' : 'none'; if (cur) hud.textContent = SL.phaseName(cur);
       }
-      const pt = (f) => {
-        if (!f) return null;
-        if (this.source === 'club' && f.club) return [f.club[0] * W, f.club[1] * H];
-        if (this.source === 'hands' && f.lm) { const a = f.lm[15], b = f.lm[16]; return [(a[0] + b[0]) / 2 * W, (a[1] + b[1]) / 2 * H]; }
-        return null;
+      const path = this.path(this.source), fi = SL.clamp(v.currentTime * (this.rec.fps || 30), 0, fr.length - 1);
+      const at = (x) => { // 프레임 사이 위치까지 보간 → 슬로모에서도 끊기지 않게
+        const i0 = Math.floor(x), i1 = Math.min(fr.length - 1, i0 + 1), f = x - i0, p0 = path[i0], p1 = path[i1];
+        if (p0 && p1) return [p0[0] + (p1[0] - p0[0]) * f, p0[1] + (p1[1] - p0[1]) * f];
+        return p0 || null;
       };
       if (this.showTracer) {
         const seg = (a, b, col) => {
-          if (b < a) return;
+          if (b <= a) return;
+          const pts = [];
+          for (let k = a; k < b; k++) pts.push(path[k]);
+          pts.push(at(b));
           ctx.strokeStyle = col; ctx.lineWidth = 4 * dpr; ctx.lineJoin = ctx.lineCap = 'round';
           ctx.shadowColor = col; ctx.shadowBlur = 10 * dpr;
-          ctx.beginPath(); let pen = false;
-          for (let k = a; k <= b; k++) { const p = pt(fr[k]); if (!p) { pen = false; continue; } if (!pen) { ctx.moveTo(p[0], p[1]); pen = true; } else ctx.lineTo(p[0], p[1]); }
-          ctx.stroke(); ctx.shadowBlur = 0;
+          // 끊긴 구간마다 중점-2차곡선으로 부드럽게 연결
+          let run = [];
+          const flush = () => {
+            if (run.length > 1) {
+              const P = run.map(p => [p[0] * W, p[1] * H]);
+              ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+              for (let k = 1; k < P.length - 1; k++) { const m = [(P[k][0] + P[k + 1][0]) / 2, (P[k][1] + P[k + 1][1]) / 2]; ctx.quadraticCurveTo(P[k][0], P[k][1], m[0], m[1]); }
+              const L = P[P.length - 1]; ctx.lineTo(L[0], L[1]); ctx.stroke();
+            }
+            run = [];
+          };
+          pts.forEach(p => { if (p) run.push(p); else flush(); }); flush();
+          ctx.shadowBlur = 0;
         };
         if (ph) {
-          seg(ph.idx.address, Math.min(i, ph.idx.top), COL_BACK);
-          if (i > ph.idx.top) seg(ph.idx.top, Math.min(i, ph.idx.finish), COL_DOWN);
-        } else seg(0, i, COL_DOWN);
-        const p = pt(fr[i]);
-        if (p) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0], p[1], 5 * dpr, 0, 7); ctx.fill(); }
+          seg(ph.idx.address, Math.min(fi, ph.idx.top), COL_BACK);
+          if (fi > ph.idx.top) seg(ph.idx.top, Math.min(fi, ph.idx.finish), COL_DOWN);
+        } else seg(0, fi, COL_DOWN);
+        const p = at(fi);
+        if (p) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, 5 * dpr, 0, 7); ctx.fill(); }
       }
       if (this.showSkel && fr[i] && fr[i].lm) SwingPlayer.skeleton(ctx, fr[i].lm, W, H, dpr);
+    }
+
+    // 손/클럽헤드 좌표를 가우시안으로 다듬은 경로 (정규화 좌표, 없는 프레임은 null)
+    path(src) {
+      this._paths = this._paths || {};
+      if (this._paths[src]) return this._paths[src];
+      const fr = this.rec.frames;
+      const raw = fr.map(f => {
+        if (src === 'club') return f.club ? [f.club[0], f.club[1]] : null;
+        if (!f.lm) return null; const a = f.lm[15], b = f.lm[16];
+        return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      });
+      // 짧은 공백(4프레임 이하) 선형 보간
+      for (let i = 0; i < raw.length; i++) {
+        if (raw[i]) continue;
+        let j = i; while (j < raw.length && !raw[j]) j++;
+        if (i > 0 && j < raw.length && j - i <= 4) for (let k = i; k < j; k++) { const r = (k - i + 1) / (j - i + 1); raw[k] = [raw[i - 1][0] + (raw[j][0] - raw[i - 1][0]) * r, raw[i - 1][1] + (raw[j][1] - raw[i - 1][1]) * r]; }
+        i = j;
+      }
+      const sigma = src === 'club' ? 1.8 : 1.2, R = Math.ceil(sigma * 2.5);
+      const out = raw.map((p, i) => {
+        if (!p) return null;
+        let sx = 0, sy = 0, sw = 0;
+        for (let k = -R; k <= R; k++) { const q = raw[i + k]; if (!q) continue; const w = Math.exp(-(k * k) / (2 * sigma * sigma)); sx += q[0] * w; sy += q[1] * w; sw += w; }
+        return [sx / sw, sy / sw];
+      });
+      return (this._paths[src] = out);
     }
 
     static skeleton(ctx, lm, W, H, dpr = 1, col = COL_SKEL) {

@@ -60,10 +60,53 @@
       return list;
     },
     card(d) {
-      return `<a class="drill" href="${SL.drills.yt(d.q)}" target="_blank" rel="noopener">
+      return `<a class="drill" data-q="${SL.esc(d.q)}" href="${SL.drills.yt(d.q)}" target="_blank" rel="noopener">
         <div class="dt" style="background:linear-gradient(135deg,hsl(${d.hue},55%,32%),hsl(${(d.hue + 40) % 360},50%,16%))">${SL.icon('youtube')}<span class="len">${d.mins}분</span></div>
-        <div class="dm"><b>${SL.esc(d.title)}</b><span>${SL.esc(d.desc)}</span>${d.why ? `<span class="badge acc" style="margin-top:4px">${SL.esc(d.why)}</span>` : ''}</div>
+        <div class="dm"><b>${SL.esc(d.title)}</b><span>${SL.esc(d.desc)}</span><span class="vt"></span>${d.why ? `<span class="badge acc" style="margin-top:4px">${SL.esc(d.why)}</span>` : ''}</div>
         <span class="chev">${SL.icon('chev')}</span></a>`;
     },
+  };
+
+  // ---------- YouTube Data API v3 (키가 있을 때만 사용) ----------
+  const CACHE_KEY = 'sl.ytcache', DAY = 864e5;
+  let cache = {}; try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch (e) {}
+  const saveCache = () => { try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) {} };
+  let warned = false;
+  SL.yt = {
+    hasKey: () => !!(SL.settings.ytKey || '').trim(),
+    // 검색 1회 = 할당량 100 단위 → 결과를 7일간 이 기기에 저장해 재사용
+    async search(q, { force = false } = {}) {
+      const key = (SL.settings.ytKey || '').trim(); if (!key) return null;
+      const c = cache[q]; if (!force && c && Date.now() - c.t < 7 * DAY) return c.v;
+      const url = 'https://www.googleapis.com/youtube/v3/search?' + new URLSearchParams({
+        part: 'snippet', type: 'video', maxResults: '1', q, relevanceLanguage: 'ko', regionCode: 'KR', videoEmbeddable: 'true', key });
+      const r = await fetch(url);
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { const e = new Error((j.error && j.error.message) || ('HTTP ' + r.status)); e.status = r.status; throw e; }
+      const it = (j.items || [])[0];
+      if (!it || !/^[\w-]{11}$/.test(it.id && it.id.videoId || '')) return null;
+      const sn = it.snippet || {}, th = sn.thumbnails || {};
+      const tmp = document.createElement('textarea'); const dec = (x) => { tmp.innerHTML = x || ''; return tmp.value; };
+      const v = { id: it.id.videoId, title: dec(sn.title), channel: dec(sn.channelTitle), thumb: (th.medium || th.high || th.default || {}).url || '' };
+      cache[q] = { t: Date.now(), v }; saveCache();
+      return v;
+    },
+    // 화면 안의 드릴 카드에 실제 영상 썸네일·제목·링크 채우기
+    async enhance(root) {
+      if (!SL.yt.hasKey()) return;
+      for (const a of SL.$$('.drill[data-q]', root)) {
+        try {
+          const v = await SL.yt.search(a.dataset.q); if (!v) continue;
+          a.href = 'https://www.youtube.com/watch?v=' + v.id;
+          const dt = SL.$('.dt', a);
+          if (/^https:\/\/i\d?\.ytimg\.com\//.test(v.thumb)) dt.style.background = `#000 url("${v.thumb}") center/cover no-repeat`;
+          SL.$('.vt', a).textContent = `${v.channel} · ${v.title}`;
+        } catch (e) {
+          if (!warned) { warned = true; SL.toast(e.status === 403 ? '유튜브 API 키 또는 하루 사용량을 확인해 주세요' : '유튜브 영상 정보를 불러오지 못했어요'); }
+          console.warn(e); break;
+        }
+      }
+    },
+    clearCache() { cache = {}; saveCache(); },
   };
 })(window.SL);

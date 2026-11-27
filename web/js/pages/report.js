@@ -43,6 +43,7 @@
     const renderDrills = () => {
       const list = SL.drills.recommend(d, [...userMiss]);
       SL.$('#drills', view).innerHTML = list.slice(0, 6).map(SL.drills.card).join('');
+      SL.yt.enhance(SL.$('#drills', view));
       const kw = [...new Set([...(d.issues.slice(0, 2).map(i => (SL.drills.BY_ISSUE[i.id] || [])[0]?.q).filter(Boolean)), ...[...userMiss].map(m => `골프 ${SL.analyzer.MISS[m]} 교정`)])];
       SL.$('#more', view).href = SL.drills.yt(kw[0] || '골프 스윙 드릴');
     };
@@ -66,6 +67,7 @@
       const b = e.target.closest('[data-m]'); if (!b) return;
       sel.has(b.dataset.m) ? sel.delete(b.dataset.m) : sel.add(b.dataset.m); b.classList.toggle('on');
       SL.$('.list', root).innerHTML = sel.size ? SL.drills.recommend(null, [...sel]).map(SL.drills.card).join('') : '';
+      SL.yt.enhance(root);
     });
   }
 
@@ -79,8 +81,9 @@
     const draw = (q = '') => {
       const s = q.trim();
       const res = all.filter(d => !s || (d.title + d.desc + d.q + (SL.analyzer.MISS[d.cat] || '')).includes(s));
-      SL.$('#list', view).innerHTML = res.length ? res.map(SL.drills.card).join('') : `<div class="empty">검색 결과가 없어요<br><a class="btn sm" style="margin-top:10px" target="_blank" href="${SL.drills.yt('골프 ' + s + ' 드릴')}">유튜브에서 "${SL.esc(s)}" 찾기</a></div>`;
+      SL.$('#list', view).innerHTML = res.length ? res.slice(0, 12).map(SL.drills.card).join('') : `<div class="empty">검색 결과가 없어요<br><a class="btn sm" style="margin-top:10px" target="_blank" href="${SL.drills.yt('골프 ' + s + ' 드릴')}">유튜브에서 "${SL.esc(s)}" 찾기</a></div>`;
     };
-    SL.$('#q', view).addEventListener('input', e => draw(e.target.value)); draw();
+    let tm; SL.$('#q', view).addEventListener('input', e => { draw(e.target.value); clearTimeout(tm); tm = setTimeout(() => SL.yt.enhance(SL.$('#list', view)), 600); });
+    draw(); SL.yt.enhance(SL.$('#list', view));
   });
 })(window.SL);

@@ -9,6 +9,11 @@ def inline(m):
     src = m.group(1)
     return f"<script>\n{(web / src).read_text(encoding='utf-8')}\n</script>"
 html = re.sub(r'<script src="(js/[^"]+)"></script>', inline, html)
+import base64
+def img_uri(m):
+    data = (web / "img" / m.group(1)).read_bytes()
+    return "data:image/png;base64," + base64.b64encode(data).decode()
+html = re.sub(r'img/([\w-]+\.png)', img_uri, html)
 out = ROOT / "dist" / "swinglab.html"
 out.parent.mkdir(exist_ok=True)
 out.write_text(html, encoding="utf-8")
