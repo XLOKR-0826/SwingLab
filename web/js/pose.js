@@ -8,6 +8,13 @@
     full: 'https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task',
   };
   const cache = {};
+  let base = null;
+  // tasks-vision 모듈 + wasm 파일셋 (포즈·사진 처리 공용)
+  const loadBase = () => base || (base = (async () => {
+    const vision = await import(LIB);
+    const files = await vision.FilesetResolver.forVisionTasks(WASM);
+    return { vision, files };
+  })().catch(e => { base = null; throw e; }));
   let ts = 0; // VIDEO 모드는 타임스탬프가 계속 증가해야 함
 
   SL.pose = {
@@ -18,8 +25,7 @@
     async get(kind = 'full') {
       if (cache[kind]) return cache[kind];
       cache[kind] = (async () => {
-        const vision = await import(LIB);
-        const files = await vision.FilesetResolver.forVisionTasks(WASM);
+        const { vision, files } = await loadBase();
         const make = (delegate) => vision.PoseLandmarker.createFromOptions(files, {
           baseOptions: { modelAssetPath: MODELS[kind], delegate },
           runningMode: 'VIDEO', numPoses: 1,
@@ -28,6 +34,20 @@
         try { return await make('GPU'); } catch (e) { console.warn('GPU 실패 → CPU', e); return make('CPU'); }
       })();
       try { return await cache[kind]; } catch (e) { cache[kind] = null; throw e; }
+    },
+
+    // 사진용: 사람 영역 마스크까지 출력하는 IMAGE 모드 인스턴스
+    async segmenter() {
+      if (cache.seg) return cache.seg;
+      cache.seg = (async () => {
+        const { vision, files } = await loadBase();
+        return vision.PoseLandmarker.createFromOptions(files, {
+          baseOptions: { modelAssetPath: MODELS.full, delegate: 'CPU' },
+          runningMode: 'IMAGE', numPoses: 1, outputSegmentationMasks: true,
+          minPoseDetectionConfidence: 0.3, minPosePresenceConfidence: 0.3,
+        });
+      })();
+      try { return await cache.seg; } catch (e) { cache.seg = null; throw e; }
     },
 
     // 한 프레임 추론 → [[x,y,vis], ...] (정규화 좌표) 또는 null

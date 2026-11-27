@@ -313,7 +313,7 @@ table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-nume
 /* ---------- 홈 (풀블리드) ---------- */
 .home{position:relative}
 .home>*:not(.home-bg){position:relative;z-index:2}
-.home-bg{position:absolute;z-index:0;top:calc(-8px - var(--safe-t));right:-18px;width:78%;height:640px;cursor:pointer;
+.home-bg{position:absolute;z-index:0;top:calc(-8px - var(--safe-t));right:-18px;width:88%;height:640px;cursor:pointer;
   background:right top/cover no-repeat}
 .home-bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to right,var(--bg) 0%,rgba(11,13,16,.55) 28%,rgba(11,13,16,0) 55%),linear-gradient(to bottom,rgba(11,13,16,0) 55%,var(--bg) 96%)}
 .home-bg.art{display:flex;justify-content:flex-end;align-items:flex-start;padding-top:40px}
@@ -346,3 +346,6 @@ table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-nume
 .hrow .go svg{width:18px;height:18px}
 
 .headline span{white-space:nowrap}
+.pv-opt{background:var(--card);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;border:1.5px solid transparent;font-size:12px}
+.pv-opt.on{border-color:var(--accent)}
+.pv-opt .pi{width:100%;aspect-ratio:3/4;border-radius:10px;background:#000 center/cover no-repeat}

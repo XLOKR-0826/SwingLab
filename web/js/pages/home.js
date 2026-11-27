@@ -121,6 +121,30 @@
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') save(); });
     });
 
+  // 사진 자동 보정 → 미리보기에서 고르기
+  const processPhoto = async (file) => {
+    const ov = SL.h(`<div class="overlay"><div class="box"><div class="spinner"></div>
+      <div style="margin-top:18px;font-weight:700;font-size:17px">사진을 다듬고 있어요</div>
+      <div class="bar"><i></i></div><div class="small muted op">준비 중…</div></div></div>`);
+    document.body.appendChild(ov);
+    let res;
+    try { res = await SL.photoFx.process(file, (msg, p) => { SL.$('.op', ov).textContent = msg; SL.$('.bar i', ov).style.width = Math.round(p * 100) + '%'; }); }
+    catch (e) { ov.remove(); SL.toast(e.message); return; }
+    ov.remove();
+    const opts = [res.auto && { k: 'auto', name: '자동 보정', src: res.auto }, { k: 'orig', name: res.upscaled ? '원본 (화질만 보정)' : '원본', src: res.original }].filter(Boolean);
+    let pick = opts[0].k;
+    SL.sheet(`<h3>이렇게 바꿀까요?</h3>
+      <div class="grid2" id="pv">${opts.map((o, i) => `<button class="pv-opt ${i ? '' : 'on'}" data-k="${o.k}"><span class="pi" style="background-image:url('${o.src}')"></span><b>${o.name}</b></button>`).join('')}</div>
+      <div class="card" style="margin-top:12px;padding:12px 14px">${res.info.map(t => `<div class="tip"><i>•</i>${SL.esc(t)}</div>`).join('')}</div>
+      <button class="btn primary block" id="pvOk" style="margin-top:12px">적용</button>`, (sh, close) => {
+      SL.$('#pv', sh).addEventListener('click', e => {
+        const b = e.target.closest('[data-k]'); if (!b) return; pick = b.dataset.k;
+        SL.$$('.pv-opt', sh).forEach(x => x.classList.toggle('on', x === b));
+      });
+      SL.$('#pvOk', sh).onclick = () => { setPhoto(opts.find(o => o.k === pick).src); close(); SL.render(); };
+    });
+  };
+
   const editPhoto = () => SL.sheet(`<h3>홈 카드 그림</h3>
       <div class="grid2" id="styles">${SL.HERO_STYLES.map(h => `<button class="style-opt ${!getPhoto() && (SL.settings.heroArt || 'silhouette') === h.key ? 'on' : ''}" data-k="${h.key}"><span class="sv">${h.svg()}</span><b>${h.name}</b></button>`).join('')}</div>
       <label class="btn primary block" for="phIn" style="margin-top:14px">${SL.icon('gallery')}내 사진으로 바꾸기</label>
@@ -132,7 +156,7 @@
       });
       SL.$('#phIn', sh).addEventListener('change', async e => {
         const f = e.target.files[0]; if (!f) return;
-        try { setPhoto(await shrink(f)); close(); SL.render(); } catch (err) { SL.toast(err.message); }
+        close(); processPhoto(f);
       });
     });
 
