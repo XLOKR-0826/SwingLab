@@ -349,3 +349,4 @@ table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-nume
 .pv-opt{background:var(--card);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;align-items:center;border:1.5px solid transparent;font-size:12px}
 .pv-opt.on{border-color:var(--accent)}
 .pv-opt .pi{width:100%;aspect-ratio:3/4;border-radius:10px;background:#000 center/cover no-repeat}
+.tool.guide.on{background:#BF5AF2;color:#fff}

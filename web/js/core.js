@@ -78,6 +78,7 @@ window.SL = window.SL || {};
     trend: I('<path d="M3 20 9 13l4 4 8-10"/><path d="M15 7h6v6"/>'),
     folder: I('<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/>'),
     user: I('<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'),
+    guide: I('<circle cx="18" cy="19" r="2" fill="currentColor"/><path d="M17 17 5 3" stroke-width="2.4"/><path d="M16.5 17.5 3 11"/><path d="M8 9v12" stroke-dasharray="1.5 2.5"/>'),
     stack: I('<rect x="4" y="4" width="12" height="12" rx="2"/><rect x="8" y="8" width="12" height="12" rx="2"/>'),
   };
   SL.icon = (n) => SL.icons[n] || '';

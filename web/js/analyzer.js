@@ -318,6 +318,7 @@
     rec.phases = A.detectPhases(rec.frames, rec.fps, rec.ar);
     rec.tempo = A.tempo(rec.phases, rec.fps, rec.slow || 1);
     rec.diagnosis = A.diagnose(rec);
+    delete rec.guides;   // 다시 분석하면 보조선도 새로 계산
     rec.analyzed = true;
     return rec;
   };

@@ -5,7 +5,7 @@
   class SwingPlayer {
     constructor(root, rec, url) {
       this.rec = rec; this.url = url; this.speed = 0.5;
-      this.showTracer = true; this.showSkel = false;
+      this.showTracer = true; this.showSkel = false; this.showGuide = false;
       this.source = rec.frames && rec.frames.some(f => f.club) ? 'club' : 'hands';
       const ph = rec.phases;
       this.el = SL.h(`<div class="sp">
@@ -29,6 +29,7 @@
             <button class="tool acc on" data-a="tracer" ${rec.frames ? '' : 'disabled'}>${SL.icon('tracer')}궤적</button>
             <button class="tool" data-a="src" ${rec.frames ? '' : 'disabled'}>${this.source === 'club' ? '클럽헤드 β' : '손 경로'}</button>
             <button class="tool" data-a="skel" ${rec.frames ? '' : 'disabled'}>${SL.icon('skeleton')}관절</button>
+            <button class="tool guide" data-a="guide" ${rec.frames ? '' : 'disabled'}>${SL.icon('guide')}보조선</button>
             <span class="legend" style="margin-left:auto"><span><i style="background:${COL_BACK}"></i>백스윙</span><span><i style="background:${COL_DOWN}"></i>다운스윙</span></span>
           </div>
           <div class="draw-tools"></div>
@@ -57,12 +58,17 @@
         if (a === 'next') this.step(1);
         if (a === 'tracer') { this.showTracer = !this.showTracer; b.classList.toggle('on', this.showTracer); }
         if (a === 'skel') { this.showSkel = !this.showSkel; b.classList.toggle('on', this.showSkel); }
+        if (a === 'guide') this.toggleGuides(b);
         if (a === 'src') {
           if (!this.rec.frames.some(f => f.club)) { SL.toast('클럽헤드를 찾지 못한 영상이에요 — 손 경로로 표시해요'); return; }
           this.source = this.source === 'club' ? 'hands' : 'club'; b.textContent = this.source === 'club' ? '클럽헤드 β' : '손 경로';
         }
       });
-      this.stage.addEventListener('click', (e) => { if (!this.layer.tool && e.target.tagName !== 'BUTTON') this.toggle(); });
+      this.stage.addEventListener('click', (e) => {
+        if (this._dragged) { this._dragged = false; return; }
+        if (!this.layer.tool && e.target.tagName !== 'BUTTON') this.toggle();
+      });
+      this.bindGuideDrag();
       this.range.addEventListener('input', () => { this.v.pause(); this.v.currentTime = this.range.value / 1000 * (this.v.duration || 0); });
       this.v.addEventListener('play', () => SL.$('[data-a=play]', this.el).innerHTML = SL.icon('pause'));
       this.v.addEventListener('pause', () => SL.$('[data-a=play]', this.el).innerHTML = SL.icon('play'));
@@ -109,6 +115,7 @@
         if (i < ph.idx.address) cur = null;
         hud.style.display = cur ? '' : 'none'; if (cur) hud.textContent = SL.phaseName(cur);
       }
+      if (this.showGuide && this.rec.guides) SL.guides.draw(ctx, this.rec.guides, W, H, dpr, !this.layer.tool);
       const path = this.path(this.source), fi = SL.clamp(v.currentTime * (this.rec.fps || 30), 0, fr.length - 1);
       const at = (x) => { // 프레임 사이 위치까지 보간 → 슬로모에서도 끊기지 않게
         const i0 = Math.floor(x), i1 = Math.min(fr.length - 1, i0 + 1), f = x - i0, p0 = path[i0], p1 = path[i1];
@@ -184,6 +191,68 @@
       [0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(k => {
         if (!lm[k] || lm[k][2] < 0.3) return; ctx.beginPath(); ctx.arc(lm[k][0] * W, lm[k][1] * H, 3.2 * dpr, 0, 7); ctx.fill();
       });
+    }
+
+    // ---------- 보조선 ----------
+    async toggleGuides(btn) {
+      if (this.showGuide) { this.showGuide = false; btn.classList.remove('on'); return; }
+      if (this.rec.view === 'front') { SL.toast('보조선은 측면(후방) 영상용이에요'); return; }
+      if (!this.rec.guides) {
+        btn.disabled = true; btn.lastChild.textContent = '계산 중…';
+        try { await this.computeGuides(); } catch (e) { console.warn(e); }
+        btn.disabled = false; btn.lastChild.textContent = '보조선';
+        if (!this.rec.guides) { SL.toast('어드레스 자세에서 관절을 찾지 못했어요'); return; }
+        const g = this.rec.guides;
+        SL.toast(g.detected ? '샤프트를 찾아 보조선을 그렸어요 · 흰 점을 끌어 조정할 수 있어요' : '샤프트를 못 찾아 평균 각도로 그렸어요 · 흰 점(공)을 끌어 맞춰 주세요', 3500);
+      }
+      this.showGuide = true; btn.classList.add('on');
+    }
+
+    async computeGuides() {
+      const fr = this.rec.frames, ph = this.rec.phases;
+      let idx = ph ? ph.idx.address : fr.findIndex(f => f.lm);
+      if (idx < 0 || !fr[idx] || !fr[idx].lm) idx = fr.findIndex(f => f.lm);
+      if (idx < 0) return;
+      const lm = fr[idx].lm, v = this.v, t0 = v.currentTime, wasPlaying = !v.paused;
+      v.pause();
+      await this.ready;
+      await SL.seek(v, fr[idx].t + 0.001);
+      const vw = v.videoWidth, vh = v.videoHeight;
+      const gw = 360, gh = Math.round(360 * vh / vw), c = document.createElement('canvas');
+      c.width = gw; c.height = gh; const cx = c.getContext('2d', { willReadFrequently: true });
+      cx.drawImage(v, 0, 0, gw, gh);
+      const d = cx.getImageData(0, 0, gw, gh).data, gray = new Uint8Array(gw * gh);
+      for (let p = 0, q = 0; p < gray.length; p++, q += 4) gray[p] = (d[q] * 77 + d[q + 1] * 150 + d[q + 2] * 29) >> 8;
+      let mask = null;
+      try {       // 사람 마스크로 엉덩이 끝 찾기 (8초 넘으면 건너뜀)
+        const big = document.createElement('canvas'); big.width = Math.min(720, vw); big.height = Math.round(big.width * vh / vw);
+        big.getContext('2d').drawImage(v, 0, 0, big.width, big.height);
+        mask = await Promise.race([SL.photoFx.personMask(big), SL.sleep(8000).then(() => null)]);
+      } catch (e) { console.warn('mask', e); }
+      this.rec.guides = SL.guides.compute(lm, vw / vh, { gray, w: gw, h: gh }, mask);
+      await SL.db.put(this.rec);
+      v.currentTime = t0; if (wasPlaying) v.play().catch(() => {});
+    }
+
+    bindGuideDrag() {
+      let drag = null;
+      const pos = (e) => { const r = this.stage.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height, r]; };
+      this.stage.addEventListener('pointerdown', (e) => {
+        const g = this.rec.guides; if (!this.showGuide || !g || this.layer.tool) return;
+        const [x, y, r] = pos(e);
+        const near = (p) => Math.hypot((p[0] - x) * r.width, (p[1] - y) * r.height) < 26;
+        drag = near(g.ball) ? 'ball' : near(g.butt) ? 'butt' : null;
+        if (!drag) return;
+        e.preventDefault(); this.stage.setPointerCapture(e.pointerId); this.v.pause();
+      });
+      this.stage.addEventListener('pointermove', (e) => {
+        if (!drag) return; e.preventDefault();
+        const g = this.rec.guides, [x, y] = pos(e);
+        if (drag === 'ball') { g.ball = [SL.clamp(x, 0, 1), SL.clamp(y, 0, 1)]; }
+        else g.butt = [SL.clamp(x, 0, 1), g.butt[1]];
+      });
+      const end = () => { if (!drag) return; drag = null; this._dragged = true; this.rec.guides.edited = true; SL.db.put(this.rec); };
+      this.stage.addEventListener('pointerup', end); this.stage.addEventListener('pointercancel', end);
     }
 
     destroy() { cancelAnimationFrame(this.raf); this.ro.disconnect(); this.layer.destroy(); this.v.pause(); this.v.removeAttribute('src'); this.v.load(); }
