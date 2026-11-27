@@ -40,6 +40,17 @@ const mw = 100, mh = 100, md = new Float32Array(mw * mh);
 for (let y = 30; y < 95; y++) for (let x = 30; x < 50; x++) md[y * mw + x] = 1;
 const g2 = G.compute(lm, 9 / 16, null, { data: md, w: mw, h: mh });
 ok(g2.fromMask && Math.abs(g2.butt[0] - 0.30) < 0.02, `마스크로 엉덩이 끝 찾기 (x ${g2.butt[0].toFixed(3)})`);
+// 정면: 마스크로 골반 양끝
+const fm = new Float32Array(mw * mh); for (let y = 20; y < 95; y++) for (let x = 30; x < 52; x++) fm[y * mw + x] = 1;
+const lmF = lm.map(p => p.slice()); lmF[23] = [0.44, 0.55, 1]; lmF[24] = [0.38, 0.55, 1]; lmF[0] = [0.41, 0.2, 1];
+const gf = G.computeFront(lmF, 9 / 16, { data: fm, w: mw, h: mh });
+ok(gf.mode === 'front' && gf.fromMask && Math.abs(gf.xs[0] - 0.30) < 0.02 && Math.abs(gf.xs[1] - 0.52) < 0.02, `정면 스웨이 선 = 골반 바깥 양끝 (${gf.xs.map(v => v.toFixed(2))})`);
+const gf2 = G.computeFront(lmF, 9 / 16, null);
+ok(gf2.xs[0] < 0.38 && gf2.xs[1] > 0.44, '마스크 없을 때도 골반 바깥에 선');
+// 손 좌표가 어긋나도 실제 샤프트 위로 굵은 선
+const sc = scene(38, 1, 20);
+const g3 = G.compute(lm, w / h, { gray: sc.g, w, h }, null);
+ok(g3.detected && Math.abs(g3.deg - 38) <= 2, `영상 검출 각도 사용 (${g3.deg}°)`);
 const r = G.ray([0.6, 0.9], [0.45, 0.52], 360, 640);
 ok(r && (r[2] <= 0.5 || r[3] <= 0.5), '선이 화면 끝까지 연장됨');
 console.log(fail ? `\n${fail}개 실패` : '\n모두 통과'); process.exit(fail ? 1 : 0);

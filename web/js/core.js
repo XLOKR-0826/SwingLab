@@ -122,7 +122,7 @@ window.SL = window.SL || {};
   };
 
   // 새 버전 감지: 서버의 version.json이 지금 실행 중인 버전과 다르면 한 번 새로고침
-  SL.VERSION = '0.5.1';
+  SL.VERSION = '0.5.2';
   SL.checkUpdate = async () => {
     try {
       const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
