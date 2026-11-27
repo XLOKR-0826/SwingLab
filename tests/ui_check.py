@@ -26,7 +26,7 @@ async def main():
                               ('7_records', '#/records', 500), ('8_tour', '#/tour', 400), ('9_store', '#/store', 400), ('10_more', '#/more', 400), ('11_drills', '#/drills', 400)]:
             await pg.evaluate(f'location.hash="{h}"'); await pg.wait_for_timeout(wait)
             if name == '2_analyze':
-                await pg.evaluate('''document.querySelector('[data-p=impact]').click()'''); await pg.wait_for_timeout(500)
+                await pg.evaluate('''for(let i=0;i<5;i++)document.querySelector('[data-pn="1"]').click()'''); await pg.wait_for_timeout(500)
                 await pg.evaluate('''document.querySelector('[data-a=skel]').click()''')
                 # 그리기: 직선 + 원
                 await pg.evaluate('''document.querySelector('[data-t=line]').click()'''); await pg.evaluate('window.scrollTo(0,0)'); box = await pg.locator('canvas.draw').bounding_box()

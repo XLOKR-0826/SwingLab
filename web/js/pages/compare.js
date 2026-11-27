@@ -14,7 +14,7 @@
         <button class="btn sm" id="sync" style="flex:1">처음으로</button>
       </div>
       <div class="small muted" style="margin:14px 0 6px">구간 맞추기 (두 영상 모두 분석된 경우)</div>
-      <div class="chips" id="align">${SL.JUMP_PHASES.map(k => `<button class="chip" data-p="${k}">${SL.phaseName(k)}</button>`).join('')}</div>
+      <div class="chips" id="align">${SL.PHASES.map(p => `<button class="chip" data-p="${p.key}">${p.name}</button>`).join('')}</div>
       <div id="tools"></div>`;
     const area = SL.$('.cmp-area', view), grid = SL.$('.cmp-grid', view);
     const layer = new SL.DrawLayer(SL.$('canvas.draw', area));

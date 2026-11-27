@@ -351,3 +351,20 @@ table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-nume
 .pv-opt .pi{width:100%;aspect-ratio:3/4;border-radius:10px;background:#000 center/cover no-repeat}
 .tool.guide.on{background:#BF5AF2;color:#fff}
 .tool.posture.on{background:#5EF0C8;color:#0B0D10}
+.pstep{display:flex;align-items:center;gap:8px;margin-top:12px}
+.pstep.off{opacity:.45}
+.pnav{width:46px;height:58px;border-radius:14px;background:var(--card);display:grid;place-items:center;flex:none}
+.pnav svg{width:20px;height:20px}
+.pnav:disabled{opacity:.3}
+.pcur{flex:1;height:58px;border-radius:14px;background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;touch-action:pan-y;user-select:none;-webkit-user-select:none;cursor:grab;transition:transform .15s}
+.pname{display:flex;align-items:baseline;gap:8px;color:var(--accent)}
+.pname b{font-size:16px;font-weight:800}
+.pname small{font-size:11px;color:var(--sub);font-weight:600}
+.pno{font-size:11px;font-weight:700;color:var(--sub)}
+.pdots{display:flex;gap:5px}
+.pdots i{width:6px;height:6px;border-radius:3px;background:var(--line);transition:all .2s}
+.pdots i.on{width:16px;background:var(--accent)}
+.pcur.flip-l{animation:fl .22s ease}.pcur.flip-r{animation:fr .22s ease}
+@keyframes fl{from{transform:translateX(14px);opacity:.4}to{transform:none;opacity:1}}
+@keyframes fr{from{transform:translateX(-14px);opacity:.4}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.pcur.flip-l,.pcur.flip-r{animation:none}}

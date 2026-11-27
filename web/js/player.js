@@ -24,7 +24,14 @@
             </div>
             <div class="speeds">${[0.25, 0.5, 0.75, 1].map(s => `<button data-s="${s}" class="${s === 0.5 ? 'on' : ''}">${s}x</button>`).join('')}</div>
           </div>
-          <div class="phases">${SL.JUMP_PHASES.map(k => `<button data-p="${k}" ${ph ? '' : 'disabled'}>${SL.phaseName(k)}<small>${ph ? ph.t[k].toFixed(2) + 's' : '-'}</small></button>`).join('')}</div>
+          <div class="pstep ${ph ? '' : 'off'}">
+            <button class="pnav" data-pn="-1" aria-label="이전 구간">${SL.icon('back')}</button>
+            <div class="pcur" title="좌우로 밀어서 구간 이동">
+              <div class="pname"><span class="pno">1/8</span><b>${ph ? '어드레스' : '구간 분석 전'}</b><small>${ph ? ph.t.address.toFixed(2) + 's' : ''}</small></div>
+              <div class="pdots">${SL.PHASES.map((p, i) => `<i data-pi="${i}"></i>`).join('')}</div>
+            </div>
+            <button class="pnav" data-pn="1" aria-label="다음 구간">${SL.icon('chev')}</button>
+          </div>
           <div class="toolrow">
             <button class="tool acc on" data-a="tracer" ${rec.frames ? '' : 'disabled'}>${SL.icon('tracer')}궤적</button>
             <button class="tool" data-a="src" ${rec.frames ? '' : 'disabled'}>${this.source === 'club' ? '클럽헤드 β' : '손 경로'}</button>
@@ -42,7 +49,7 @@
       this.layer = new SL.DrawLayer(SL.$('canvas.draw', this.el));
       SL.drawToolbar(this.layer, SL.$('.draw-tools', this.el));
       this.range = SL.$('input[type=range]', this.el); this.tEl = SL.$('.t', this.el);
-      this.bind();
+      this.bind(); this.bindPhaseSwipe(); if (rec.phases) this.showPhase(0);
       this.ready = SL.loadVideo(this.v, url).then(() => { this.v.playbackRate = this.speed; this.fit(); });
       this.ro = new ResizeObserver(() => this.fit()); this.ro.observe(SL.$('.sp-stagewrap', this.el));
       const loop = () => { this.paint(); this.raf = requestAnimationFrame(loop); }; loop();
@@ -53,6 +60,7 @@
         const b = e.target.closest('button'); if (!b || b.disabled) return;
         if (b.dataset.s) this.setSpeed(+b.dataset.s);
         if (b.dataset.p) this.jump(b.dataset.p);
+        if (b.dataset.pn) this.stepPhase(+b.dataset.pn);
         const a = b.dataset.a;
         if (a === 'play') this.toggle();
         if (a === 'prev') this.step(-1);
@@ -103,7 +111,36 @@
     jump(k) {
       const ph = this.rec.phases; if (!ph) return;
       this.v.pause(); this.v.currentTime = ph.t[k] + 0.001;
-      SL.$$('[data-p]', this.el).forEach(b => b.classList.toggle('on', b.dataset.p === k));
+      this.showPhase(SL.PHASES.findIndex(p => p.key === k));
+    }
+    // 구간 이동 바: 지금 보여주는 구간 번호 표시
+    showPhase(i) {
+      const ph = this.rec.phases; if (!ph || i < 0 || i === this._pi) return;
+      this._pi = i; const p = SL.PHASES[i];
+      SL.$('.pno', this.el).textContent = `${i + 1}/${SL.PHASES.length}`;
+      SL.$('.pname b', this.el).textContent = p.name;
+      SL.$('.pname small', this.el).textContent = ph.t[p.key].toFixed(2) + 's';
+      SL.$$('.pdots i', this.el).forEach((d, j) => d.classList.toggle('on', j === i));
+      SL.$('[data-pn="-1"]', this.el).disabled = i === 0;
+      SL.$('[data-pn="1"]', this.el).disabled = i === SL.PHASES.length - 1;
+    }
+    stepPhase(d) {
+      if (!this.rec.phases) return SL.toast('구간 분석이 된 영상에서만 쓸 수 있어요');
+      const i = SL.clamp((this._pi ?? 0) + d, 0, SL.PHASES.length - 1);
+      this._pi = -1; this.jump(SL.PHASES[i].key);
+      const c = SL.$('.pcur', this.el); c.classList.remove('flip-l', 'flip-r'); void c.offsetWidth; c.classList.add(d > 0 ? 'flip-l' : 'flip-r');
+    }
+    bindPhaseSwipe() {
+      const c = SL.$('.pcur', this.el); let x0 = null, moved = false;
+      c.addEventListener('pointerdown', e => { x0 = e.clientX; moved = false; c.setPointerCapture(e.pointerId); });
+      c.addEventListener('pointermove', e => { if (x0 == null) return; const dx = e.clientX - x0; c.style.transform = `translateX(${SL.clamp(dx, -60, 60) * 0.5}px)`; if (Math.abs(dx) > 8) moved = true; });
+      const end = e => {
+        if (x0 == null) return; const dx = e.clientX - x0; x0 = null; c.style.transform = '';
+        if (Math.abs(dx) > 35) this.stepPhase(dx < 0 ? 1 : -1);
+        else if (!moved && this.rec.phases) { const k = SL.PHASES[Math.max(0, this._pi ?? 0)].key; this._pi = -1; this.jump(k); }   // 탭 = 표시된 구간으로
+      };
+      c.addEventListener('pointerup', end); c.addEventListener('pointercancel', () => { x0 = null; c.style.transform = ''; });
+      c.addEventListener('dblclick', e => e.preventDefault());
     }
     get idx() { const f = this.rec.frames; if (!f) return 0; return SL.clamp(Math.round(this.v.currentTime * (this.rec.fps || 30)), 0, f.length - 1); }
 
@@ -120,6 +157,9 @@
         let cur = null; SL.PHASES.forEach(p => { if (i >= ph.idx[p.key]) cur = p.key; });
         if (i < ph.idx.address) cur = null;
         hud.style.display = cur ? '' : 'none'; if (cur) hud.textContent = SL.phaseName(cur);
+        const ci = SL.PHASES.findIndex(p => p.key === (cur || 'address'));
+        this._lastPi = ci;
+        if (!v.paused || document.activeElement === this.range) this.showPhase(ci);   // 재생·탐색 중엔 지금 구간을 따라감
       }
       if (this.showGuide && this.rec.guides) SL.guides.draw(ctx, this.rec.guides, W, H, dpr, !this.layer.tool);
       const path = this.path(this.source), fi = SL.clamp(v.currentTime * (this.rec.fps || 30), 0, fr.length - 1);
