@@ -30,6 +30,7 @@
             <button class="tool" data-a="src" ${rec.frames ? '' : 'disabled'}>${this.source === 'club' ? '클럽헤드 β' : '손 경로'}</button>
             <button class="tool" data-a="skel" ${rec.frames ? '' : 'disabled'}>${SL.icon('skeleton')}관절</button>
             <button class="tool guide" data-a="guide" ${rec.frames ? '' : 'disabled'}>${SL.icon('guide')}보조선</button>
+            <button class="tool posture" data-a="posture" ${rec.frames ? '' : 'disabled'}>${SL.icon('posture')}머리·척추</button>
             <span class="legend" style="margin-left:auto"><span><i style="background:${COL_BACK}"></i>백스윙</span><span><i style="background:${COL_DOWN}"></i>다운스윙</span></span>
           </div>
           <div class="draw-tools"></div>
@@ -59,6 +60,11 @@
         if (a === 'tracer') { this.showTracer = !this.showTracer; b.classList.toggle('on', this.showTracer); }
         if (a === 'skel') { this.showSkel = !this.showSkel; b.classList.toggle('on', this.showSkel); }
         if (a === 'guide') this.toggleGuides(b);
+        if (a === 'posture') {
+          if (!this._post) this._post = SL.posture.build(this.rec.frames, this.rec.phases ? this.rec.phases.idx.address : null);
+          this.showPosture = !this.showPosture; b.classList.toggle('on', this.showPosture);
+          if (this.showPosture && !this._postTip) { this._postTip = 1; SL.toast('점선 = 어드레스 때 위치 · 실선 = 지금 위치'); }
+        }
         if (a === 'src') {
           if (!this.rec.frames.some(f => f.club)) { SL.toast('클럽헤드를 찾지 못한 영상이에요 — 손 경로로 표시해요'); return; }
           this.source = this.source === 'club' ? 'hands' : 'club'; b.textContent = this.source === 'club' ? '클럽헤드 β' : '손 경로';
@@ -152,6 +158,7 @@
         if (p) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, 5 * dpr, 0, 7); ctx.fill(); }
       }
       if (this.showSkel && fr[i] && fr[i].lm) SwingPlayer.skeleton(ctx, fr[i].lm, W, H, dpr);
+      if (this.showPosture && this._post) SL.posture.draw(ctx, this._post, fi, W, H, dpr);
     }
 
     // 손/클럽헤드 좌표를 가우시안으로 다듬은 경로 (정규화 좌표, 없는 프레임은 null)

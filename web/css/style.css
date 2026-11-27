@@ -350,3 +350,4 @@ table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-nume
 .pv-opt.on{border-color:var(--accent)}
 .pv-opt .pi{width:100%;aspect-ratio:3/4;border-radius:10px;background:#000 center/cover no-repeat}
 .tool.guide.on{background:#BF5AF2;color:#fff}
+.tool.posture.on{background:#5EF0C8;color:#0B0D10}

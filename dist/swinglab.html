@@ -363,6 +363,7 @@ table.t td{padding:9px 4px;border-bottom:1px solid var(--line);font-variant-nume
 .pv-opt.on{border-color:var(--accent)}
 .pv-opt .pi{width:100%;aspect-ratio:3/4;border-radius:10px;background:#000 center/cover no-repeat}
 .tool.guide.on{background:#BF5AF2;color:#fff}
+.tool.posture.on{background:#5EF0C8;color:#0B0D10}
 
 </style>
 </head>
@@ -443,6 +444,7 @@ window.SL = window.SL || {};
     undo: I('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),
     trash: I('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
     tracer: I('<path d="M4 20C6 10 12 4 20 4"/><path d="M4 20c4-2 8-8 9-14" stroke-dasharray="2 3"/>'),
+    posture: I('<circle cx="12" cy="5.5" r="3.5"/><circle cx="15" cy="6.5" r="3.5" stroke-dasharray="1.5 2"/><path d="M12 10.5 11 21"/>'),
     skeleton: I('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 9h8M12 14l-3 7M12 14l3 7M8 9l-2 5M16 9l2 5"/>'),
     flip: I('<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>'),
     gallery: I('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5L5 20"/>'),
@@ -504,7 +506,7 @@ window.SL = window.SL || {};
   };
 
   // 새 버전 감지: 서버의 version.json이 지금 실행 중인 버전과 다르면 한 번 새로고침
-  SL.VERSION = '0.5.2';
+  SL.VERSION = '0.6.0';
   SL.checkUpdate = async () => {
     try {
       const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
@@ -1466,6 +1468,93 @@ window.SL = window.SL || {};
 
 </script>
 <script>
+// 머리·척추 표시: 어드레스 위치(점선) vs 현재 위치(실선) + 머리 이동 거리
+(function (SL) {
+  const P = {};
+  const KEYS = [0, 7, 8, 11, 12, 23, 24];
+  P.COLOR = '#5EF0C8';
+  P.TORSO_CM = 48;            // 어깨 중심~골반 중심 평균 길이(성인) — 화면 거리를 cm로 바꿀 때 기준
+
+  // 관절별 좌표를 프레임 축으로 다듬기 (짧은 공백 보간 + 가우시안)
+  P.build = (frames, addrIdx) => {
+    const S = {};
+    KEYS.forEach(k => {
+      const raw = frames.map(f => f.lm && f.lm[k] && f.lm[k][2] > 0.2 ? [f.lm[k][0], f.lm[k][1]] : null);
+      for (let i = 0; i < raw.length; i++) {
+        if (raw[i]) continue;
+        let j = i; while (j < raw.length && !raw[j]) j++;
+        if (i > 0 && j < raw.length && j - i <= 4) for (let q = i; q < j; q++) { const r = (q - i + 1) / (j - i + 1); raw[q] = [raw[i - 1][0] + (raw[j][0] - raw[i - 1][0]) * r, raw[i - 1][1] + (raw[j][1] - raw[i - 1][1]) * r]; }
+        i = j;
+      }
+      const sg = 1.2, R = 3;
+      S[k] = raw.map((p, i) => {
+        if (!p) return null;
+        let sx = 0, sy = 0, sw = 0;
+        for (let d = -R; d <= R; d++) { const q = raw[i + d]; if (!q) continue; const w = Math.exp(-d * d / (2 * sg * sg)); sx += q[0] * w; sy += q[1] * w; sw += w; }
+        return [sx / sw, sy / sw];
+      });
+    });
+    if (addrIdx == null || addrIdx < 0) addrIdx = frames.findIndex(f => f.lm);
+    return { S, addrIdx, n: frames.length };
+  };
+
+  // 프레임 사이(소수 위치)까지 보간한 자세
+  P.pose = (st, fi) => {
+    const i0 = Math.max(0, Math.min(st.n - 1, Math.floor(fi))), i1 = Math.min(st.n - 1, i0 + 1), f = fi - i0;
+    const g = (k) => { const a = st.S[k][i0], b = st.S[k][i1]; return a && b ? [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f] : (a || b); };
+    const m = (a, b) => (a && b ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] : null);
+    const nose = g(0), ears = m(g(7), g(8));
+    const head = ears && nose ? [ears[0] * 0.7 + nose[0] * 0.3, ears[1] * 0.7 + nose[1] * 0.3] : (ears || nose);
+    const sh = m(g(11), g(12)), hip = m(g(23), g(24));
+    return head && sh && hip ? { head, sh, hip } : null;
+  };
+
+  P.draw = (ctx, st, fi, W, H, dpr) => {
+    const a = P.pose(st, st.addrIdx), c = P.pose(st, fi);
+    if (!a || !c) return;
+    const px = (p) => [p[0] * W, p[1] * H];
+    const T = Math.hypot((a.sh[0] - a.hip[0]) * W, (a.sh[1] - a.hip[1]) * H) || H * 0.25;
+    const R = T * 0.22;                                  // 머리 반지름 ≈ 몸통 길이의 22%
+    ctx.save();
+    ctx.strokeStyle = P.COLOR; ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 2 * dpr;
+    const circle = (p, dash) => { const q = px(p); ctx.setLineDash(dash ? [3 * dpr, 4 * dpr] : []); ctx.lineWidth = (dash ? 2 : 2.6) * dpr; ctx.beginPath(); ctx.arc(q[0], q[1], R, 0, Math.PI * 2); ctx.stroke(); };
+    // 척추: 목 아래(어깨 중심 살짝 위)에서 골반 중심까지
+    const spine = (s, dash) => {
+      const top = px(s.sh), bot = px(s.hip);
+      ctx.setLineDash(dash ? [3 * dpr, 4 * dpr] : []); ctx.lineWidth = (dash ? 2 : 2.6) * dpr;
+      ctx.beginPath(); ctx.moveTo(top[0], top[1]); ctx.lineTo(bot[0] + (top[0] - bot[0]) * 0.08, bot[1] + (top[1] - bot[1]) * 0.08); ctx.stroke();
+    };
+    const moved = Math.hypot((c.head[0] - a.head[0]) * W, (c.head[1] - a.head[1]) * H);
+    const atAddr = Math.abs(fi - st.addrIdx) < 0.5;
+    if (!atAddr) { circle(a.head, true); spine(a, true); }   // 어드레스 위치 = 점선
+    circle(c.head, false); spine(c, false);                    // 현재 위치 = 실선
+    if (!atAddr && moved > R * 0.35) {
+      const A = px(a.head), C = px(c.head);
+      ctx.setLineDash([2 * dpr, 3 * dpr]); ctx.lineWidth = 1.4 * dpr;
+      ctx.beginPath(); ctx.moveTo(A[0], A[1]); ctx.lineTo(C[0], C[1]); ctx.stroke(); ctx.setLineDash([]);
+      ctx.shadowBlur = 0; ctx.fillStyle = P.COLOR; ctx.beginPath(); ctx.arc(C[0], C[1], 2.6 * dpr, 0, 7); ctx.fill();
+      const cm = Math.round(moved / T * P.TORSO_CM);
+      const txt = `머리 이동 약 ${cm}cm`;
+      ctx.font = `700 ${11 * dpr}px Pretendard, system-ui, sans-serif`;
+      const tw = ctx.measureText(txt).width, bx = SL.clamp(C[0] + R + 6 * dpr, 4 * dpr, W - tw - 16 * dpr), by = SL.clamp(C[1] - R, 4 * dpr, H - 24 * dpr);
+      ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(bx, by, tw + 12 * dpr, 20 * dpr, 6 * dpr) : ctx.rect(bx, by, tw + 12 * dpr, 20 * dpr); ctx.fill();
+      ctx.fillStyle = P.COLOR; ctx.fillText(txt, bx + 6 * dpr, by + 14 * dpr);
+    }
+    ctx.restore();
+  };
+
+  P.moveCm = (st, fi) => {
+    const a = P.pose(st, st.addrIdx), c = P.pose(st, fi); if (!a || !c) return null;
+    const T = Math.hypot(a.sh[0] - a.hip[0], a.sh[1] - a.hip[1]);
+    return Math.hypot(c.head[0] - a.head[0], c.head[1] - a.head[1]) / T * P.TORSO_CM;
+  };
+
+  SL.posture = P;
+})(typeof window !== 'undefined' ? window.SL : (globalThis.SL = globalThis.SL || {}));
+
+</script>
+<script>
 // 보조선(측면 영상): 어드레스 기준 샤프트 플레인(굵은 선) · 어깨 플레인(얇은 선) · 엉덩이 수직 점선
 (function (SL) {
   const G = {};
@@ -1654,6 +1743,7 @@ window.SL = window.SL || {};
             <button class="tool" data-a="src" ${rec.frames ? '' : 'disabled'}>${this.source === 'club' ? '클럽헤드 β' : '손 경로'}</button>
             <button class="tool" data-a="skel" ${rec.frames ? '' : 'disabled'}>${SL.icon('skeleton')}관절</button>
             <button class="tool guide" data-a="guide" ${rec.frames ? '' : 'disabled'}>${SL.icon('guide')}보조선</button>
+            <button class="tool posture" data-a="posture" ${rec.frames ? '' : 'disabled'}>${SL.icon('posture')}머리·척추</button>
             <span class="legend" style="margin-left:auto"><span><i style="background:${COL_BACK}"></i>백스윙</span><span><i style="background:${COL_DOWN}"></i>다운스윙</span></span>
           </div>
           <div class="draw-tools"></div>
@@ -1683,6 +1773,11 @@ window.SL = window.SL || {};
         if (a === 'tracer') { this.showTracer = !this.showTracer; b.classList.toggle('on', this.showTracer); }
         if (a === 'skel') { this.showSkel = !this.showSkel; b.classList.toggle('on', this.showSkel); }
         if (a === 'guide') this.toggleGuides(b);
+        if (a === 'posture') {
+          if (!this._post) this._post = SL.posture.build(this.rec.frames, this.rec.phases ? this.rec.phases.idx.address : null);
+          this.showPosture = !this.showPosture; b.classList.toggle('on', this.showPosture);
+          if (this.showPosture && !this._postTip) { this._postTip = 1; SL.toast('점선 = 어드레스 때 위치 · 실선 = 지금 위치'); }
+        }
         if (a === 'src') {
           if (!this.rec.frames.some(f => f.club)) { SL.toast('클럽헤드를 찾지 못한 영상이에요 — 손 경로로 표시해요'); return; }
           this.source = this.source === 'club' ? 'hands' : 'club'; b.textContent = this.source === 'club' ? '클럽헤드 β' : '손 경로';
@@ -1776,6 +1871,7 @@ window.SL = window.SL || {};
         if (p) { ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(p[0] * W, p[1] * H, 5 * dpr, 0, 7); ctx.fill(); }
       }
       if (this.showSkel && fr[i] && fr[i].lm) SwingPlayer.skeleton(ctx, fr[i].lm, W, H, dpr);
+      if (this.showPosture && this._post) SL.posture.draw(ctx, this._post, fi, W, H, dpr);
     }
 
     // 손/클럽헤드 좌표를 가우시안으로 다듬은 경로 (정규화 좌표, 없는 프레임은 null)

@@ -61,6 +61,7 @@ window.SL = window.SL || {};
     undo: I('<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>'),
     trash: I('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/>'),
     tracer: I('<path d="M4 20C6 10 12 4 20 4"/><path d="M4 20c4-2 8-8 9-14" stroke-dasharray="2 3"/>'),
+    posture: I('<circle cx="12" cy="5.5" r="3.5"/><circle cx="15" cy="6.5" r="3.5" stroke-dasharray="1.5 2"/><path d="M12 10.5 11 21"/>'),
     skeleton: I('<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M8 9h8M12 14l-3 7M12 14l3 7M8 9l-2 5M16 9l2 5"/>'),
     flip: I('<path d="M4 12a8 8 0 0 1 14-5.3L20 9"/><path d="M20 4v5h-5"/><path d="M20 12a8 8 0 0 1-14 5.3L4 15"/><path d="M4 20v-5h5"/>'),
     gallery: I('<rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5L5 20"/>'),
@@ -122,7 +123,7 @@ window.SL = window.SL || {};
   };
 
   // 새 버전 감지: 서버의 version.json이 지금 실행 중인 버전과 다르면 한 번 새로고침
-  SL.VERSION = '0.5.2';
+  SL.VERSION = '0.6.0';
   SL.checkUpdate = async () => {
     try {
       const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
