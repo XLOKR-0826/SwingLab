@@ -121,7 +121,25 @@ window.SL = window.SL || {};
     catch (e) { console.error(e); view.innerHTML = `<div class="empty">문제가 발생했어요<br><span class="small dim">${SL.esc(e.message)}</span></div>`; }
   };
 
+  // 새 버전 감지: 서버의 version.json이 지금 실행 중인 버전과 다르면 한 번 새로고침
+  SL.VERSION = '0.5.1';
+  SL.checkUpdate = async () => {
+    try {
+      const r = await fetch('version.json?t=' + Date.now(), { cache: 'no-store' });
+      if (!r.ok) return;
+      const { v } = await r.json();
+      if (v && v !== SL.VERSION) {
+        let tried = null; try { tried = sessionStorage.getItem('sl.upd'); } catch (e) {}
+        if (tried === v) return;                        // 같은 버전으로 무한 새로고침 방지
+        try { sessionStorage.setItem('sl.upd', v); } catch (e) {}
+        SL.toast('새 버전(v' + v + ')으로 업데이트할게요'); setTimeout(() => location.reload(), 900);
+      }
+    } catch (e) {}
+  };
+
   SL.start = () => {
+    SL.checkUpdate();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') SL.checkUpdate(); });
     SL.$$('#tabbar .ti').forEach(s => s.innerHTML = SL.icon(s.dataset.icon));
     window.addEventListener('hashchange', SL.render);
     SL.render();

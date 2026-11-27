@@ -60,7 +60,7 @@
         <div class="list-row"><span>저장 공간</span><span class="r" id="usage">-</span></div>
         <button class="list-row" id="wipe" style="width:100%;color:var(--red)">모든 기록 삭제</button>
       </div>
-      <p class="tiny dim" style="margin-top:16px;text-align:center">SwingLab v0.5 · 영상은 이 기기 브라우저에만 저장돼요</p>`;
+      <p class="tiny dim" style="margin-top:16px;text-align:center">SwingLab v${SL.VERSION} · 영상은 이 기기 브라우저에만 저장돼요</p>`;
     SL.$('#nm', view).addEventListener('change', e => { s.name = e.target.value.trim() || '사용자'; SL.saveSettings(); SL.toast('저장했어요'); });
     SL.$('#hand', view).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s.hand = b.dataset.h; SL.saveSettings(); SL.$$('#hand button', view).forEach(x => x.classList.toggle('on', x === b)); });
     SL.$('#fps', view).addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; s.analysisFps = +b.dataset.f; SL.saveSettings(); SL.$$('#fps button', view).forEach(x => x.classList.toggle('on', x === b)); });
